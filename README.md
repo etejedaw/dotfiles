@@ -50,7 +50,7 @@ Cada carpeta de primer nivel (salvo `packages/`) es un **paquete de [GNU Stow](h
 ### En un equipo nuevo
 
 ```bash
-# 1. Clonar el repo en ~/.dotfiles (tiene que ser esa ruta)
+# 1. Clonar el repo en ~/.dotfiles (el último argumento le da ese nombre a la carpeta)
 git clone https://github.com/etejedaw/dotfiles.git ~/.dotfiles
 
 # 2. Ver qué va a hacer, sin cambiar nada
@@ -59,6 +59,8 @@ git clone https://github.com/etejedaw/dotfiles.git ~/.dotfiles
 # 3. Instalar
 ~/.dotfiles/install.sh
 ```
+
+El repo se llama `dotfiles`, pero por convención se clona en `~/.dotfiles` (con punto, para que quede oculto en el home). `install.sh` funcionaría desde cualquier carpeta, pero **no la muevas después de instalar**: los symlinks son relativos y quedarían rotos. Si necesitas moverla, primero quita los enlaces (`stow -t ~ -D <paquetes>`), mueve la carpeta y vuelve a ejecutar `install.sh`.
 
 En un equipo nuevo todavía no hay llave SSH, por eso el clone va por HTTPS. Si el repo fuera privado, primero `gh auth login` y después `gh repo clone etejedaw/dotfiles ~/.dotfiles`.
 
