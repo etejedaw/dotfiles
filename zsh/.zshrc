@@ -60,3 +60,7 @@ export PATH="./node_modules/.bin:$HOME/.local/bin:$PATH"
 
 # Alias, funciones y cosas de un solo equipo. NO está en el repo.
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# Quita las rutas repetidas de PATH y FPATH (brew shellenv y /etc/paths.d agregan las mismas).
+# Va al final: con `PATH=...` zsh no las quita, solo al aplicar -U sobre el array ya armado.
+typeset -U path fpath

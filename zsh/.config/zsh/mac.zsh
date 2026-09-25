@@ -1,5 +1,5 @@
-# brew en el PATH: en un Mac nuevo nada lo carga (no hay ~/.zprofile). Solo si falta, porque shellenv duplica rutas
-if ! command -v brew >/dev/null && [[ -x /opt/homebrew/bin/brew ]]; then
+# Variables y PATH de brew: nada más los carga (no hay ~/.zprofile). /etc/paths.d/homebrew solo agrega brew al PATH
+if [[ -z $HOMEBREW_PREFIX && -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv zsh)"
 fi
 
