@@ -1,2 +1,26 @@
-# Paquetes solo para Mac (Homebrew), además de `common`. Se completa en el Mac.
+# Paquetes solo para Mac (Homebrew), además de `common`.
 # `brew install` detecta solo si es fórmula o cask. install.sh ignora comentarios y líneas vacías.
+# Paquetes de taps externos: <usuario>/<tap>/<paquete>. install.sh les da confianza con `brew trust` antes de instalarlos.
+
+# Terminal
+gittower/tap/git-flow-next
+
+# Equivalencias (ver equivalencias.md)
+hyper
+raycast
+vscodium
+typora
+brave-browser
+bruno
+dbeaver-community
+docker-desktop
+
+# Apps
+affine
+discord
+telegram
+tidal
+steam
+onlyoffice
+nextcloud
+chattymin/tap/poke-token-bar

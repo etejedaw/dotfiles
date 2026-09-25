@@ -69,10 +69,27 @@ install_mac_packages() {
   done
 
   step "Paquetes de Homebrew (common + brew)"
-  local pkgs
+  local pkgs p
   pkgs=$( (list common; list brew) | sort -u)
+  # Paquetes de taps externos (<usuario>/<tap>/<paquete>): Homebrew pide confianza explícita para cargarlos.
+  # Sin --formula ni --cask, brew trust deduce el tipo mirando el tap.
+  for p in $pkgs; do
+    [[ $p == */*/* ]] || continue
+    run brew tap "${p%/*}"
+    run brew trust "$p"
+  done
   # shellcheck disable=SC2086
   [[ -n $pkgs ]] && run brew install $pkgs
+
+  step "Actualizaciones automáticas de Homebrew"
+  if brew autoupdate status 2>/dev/null | grep -q 'installed and running'; then
+    info "ya activas"
+  else
+    run brew tap domt4/autoupdate
+    run brew trust --command domt4/autoupdate/autoupdate
+    # Cada 12 h y al iniciar sesión: actualiza fórmulas y casks, limpia versiones viejas y pide sudo con una ventana
+    run brew autoupdate start 12h --upgrade --cleanup --immediate --sudo
+  fi
 }
 
 install_fedora_packages() {
@@ -124,6 +141,23 @@ install_fedora_packages() {
         flatpak install --user -y --noninteractive "$file"
         rm -f "$file"'
     fi
+  fi
+
+  # No está en dnf: se descarga el binario de la última versión en GitHub (no se actualiza solo)
+  step "git-flow-next (binario de GitHub)"
+  if [[ -x $HOME/.local/bin/git-flow ]]; then
+    info "ya instalado"
+  else
+    local arch
+    case "$(uname -m)" in
+      aarch64) arch=arm64 ;;
+      *) arch=amd64 ;;
+    esac
+    # shellcheck disable=SC2016  # las variables las expande el bash -c, no este script
+    run env ARCH="$arch" bash -c 'set -e
+      url=$(curl -fsSL https://api.github.com/repos/gittower/git-flow-next/releases/latest | grep -o "https://[^\"]*linux-$ARCH\.tar\.gz" | head -1)
+      mkdir -p "$HOME/.local/bin"
+      curl -fsSL "$url" | tar -xz -C "$HOME/.local/bin" git-flow'
   fi
 }
 
@@ -323,6 +357,7 @@ cat <<EOF
     - Abrir una terminal nueva para cargar zsh
 EOF
 [[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"
+[[ $OS == Darwin ]] && echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
 [[ $OS == Linux ]] && echo "    - Docker: sudo systemctl enable --now docker && sudo usermod -aG docker \$USER"
 [[ -d $BACKUP_DIR ]] && echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/~}"
 if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$REPO_STATUS_BEFORE" ]]; then

@@ -21,7 +21,9 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 Además de los archivos de configuración, `install.sh` instala:
 
 - Los paquetes de `packages/` (ver [Listas de paquetes](#listas-de-paquetes)).
-- AFFiNE, que no está en Flathub: descarga el `.flatpak` de su última versión en GitHub. Este no se actualiza con `flatpak update`; para actualizarlo, desinstálalo y vuelve a ejecutar `install.sh`.
+- En Mac, las actualizaciones automáticas de Homebrew ([homebrew-autoupdate](https://github.com/DomT4/homebrew-autoupdate)): cada 12 horas y al iniciar sesión actualiza fórmulas y casks y limpia las versiones viejas.
+- En Fedora, AFFiNE, que no está en Flathub (en Mac viene de brew): descarga el `.flatpak` de su última versión en GitHub. Este no se actualiza con `flatpak update`; para actualizarlo, desinstálalo y vuelve a ejecutar `install.sh`.
+- En Fedora, [git-flow-next](https://github.com/gittower/git-flow-next), que no está en dnf: descarga el binario de su última versión en GitHub a `~/.local/bin`. No se actualiza solo; para actualizarlo, bórralo y vuelve a ejecutar `install.sh`. En Mac viene de brew.
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS.
@@ -84,6 +86,7 @@ Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `in
 - **Secretos:** tokens y contraseñas en `~/.secrets` (solo `export`, permisos 600).
 - **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`.
 - **Docker (Fedora):** `sudo systemctl enable --now docker && sudo usermod -aG docker $USER`.
+- **Docker (Mac):** abrir Docker Desktop una vez para aceptar la licencia y terminar la instalación.
 - **Mac:** `p10k configure` si los íconos no se ven bien.
 
 ## Cómo funciona
@@ -165,7 +168,7 @@ Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`)
 | `packages/dnf` | Fedora | `dnf install` |
 | `packages/dnf-repos` | Fedora: repos externos que se agregan antes (Docker, gh) | `dnf config-manager addrepo` |
 | `packages/flatpak` | Fedora con escritorio | `flatpak install flathub` |
-| `packages/brew` | Mac (fórmulas y casks) | `brew install` |
+| `packages/brew` | Mac (fórmulas y casks). Los de taps externos van como `<usuario>/<tap>/<paquete>` | `brew install` |
 | `packages/equivalencias.md` | Qué programa cumple cada función en cada sistema | — |
 
 ## Instalación manual (sin `install.sh`)
@@ -188,6 +191,9 @@ flatpak install --user -y flathub $(sed 's/#.*//' packages/flatpak)
 # AFFiNE: no está en Flathub, se instala el .flatpak de GitHub
 curl -fsSL -o /tmp/affine.flatpak "$(curl -fsSL https://api.github.com/repos/toeverything/AFFiNE/releases/latest | grep -o 'https://[^"]*linux-x64\.flatpak' | head -1)"
 flatpak install --user -y /tmp/affine.flatpak
+# git-flow-next: no está en dnf, se descarga el binario de GitHub (cambia amd64 por arm64 en ARM)
+mkdir -p ~/.local/bin
+curl -fsSL "$(curl -fsSL https://api.github.com/repos/gittower/git-flow-next/releases/latest | grep -o 'https://[^"]*linux-amd64\.tar\.gz' | head -1)" | tar -xz -C ~/.local/bin git-flow
 ```
 
 **Mac:**
@@ -196,7 +202,13 @@ flatpak install --user -y /tmp/affine.flatpak
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 eval "$(/opt/homebrew/bin/brew shellenv)"
 cd ~/.dotfiles
+# Taps externos: primero el tap y la confianza de cada paquete
+brew tap gittower/tap && brew trust gittower/tap/git-flow-next
+brew tap chattymin/tap && brew trust chattymin/tap/poke-token-bar
 brew install $(sed 's/#.*//' packages/common packages/brew)
+# Actualizaciones automáticas
+brew tap domt4/autoupdate && brew trust --command domt4/autoupdate/autoupdate
+brew autoupdate start 12h --upgrade --cleanup --immediate --sudo
 ```
 
 **Los dos:**
