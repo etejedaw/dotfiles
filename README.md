@@ -20,6 +20,7 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 Además de los archivos de configuración, `install.sh` instala:
 
 - Los paquetes de `packages/` (ver [Listas de paquetes](#listas-de-paquetes)).
+- AFFiNE, que no está en Flathub: descarga el `.flatpak` de su última versión en GitHub. Este no se actualiza con `flatpak update`; para actualizarlo, desinstálalo y vuelve a ejecutar `install.sh`.
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS.
@@ -76,7 +77,6 @@ Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `in
 - **IPs de los servidores:** crear `~/.ssh/config.d/hosts` (ver [SSH](#ssh)).
 - **Secretos y cosas de un solo equipo:** en `~/.zshrc.local`, que se carga al final de `.zshrc` y no está en el repo.
 - **Docker (Fedora):** `sudo systemctl enable --now docker && sudo usermod -aG docker $USER`.
-- **AFFiNE (Fedora):** no está en Flathub, se instala a mano.
 - **Mac:** `p10k configure` si los íconos no se ven bien.
 
 ## Cómo funciona
@@ -175,6 +175,9 @@ sudo dnf install -y $(sed 's/#.*//' packages/common packages/dnf)
 # Apps gráficas (solo con escritorio)
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak install --user -y flathub $(sed 's/#.*//' packages/flatpak)
+# AFFiNE: no está en Flathub, se instala el .flatpak de GitHub
+curl -fsSL -o /tmp/affine.flatpak "$(curl -fsSL https://api.github.com/repos/toeverything/AFFiNE/releases/latest | grep -o 'https://[^"]*linux-x64\.flatpak' | head -1)"
+flatpak install --user -y /tmp/affine.flatpak
 ```
 
 **Mac:**

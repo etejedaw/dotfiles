@@ -111,6 +111,19 @@ install_fedora_packages() {
     else
       info "todo instalado"
     fi
+
+    # No está en Flathub: se instala el .flatpak de la última versión en GitHub (no se actualiza con flatpak update)
+    step "AFFiNE (.flatpak de GitHub)"
+    if flatpak info pro.affine.app >/dev/null 2>&1; then
+      info "ya instalado"
+    else
+      run bash -c 'set -e
+        url=$(curl -fsSL https://api.github.com/repos/toeverything/AFFiNE/releases/latest | grep -o "https://[^\"]*linux-x64\.flatpak" | head -1)
+        file=$(mktemp --suffix=.flatpak)
+        curl -fsSL "$url" -o "$file"
+        flatpak install --user -y --noninteractive "$file"
+        rm -f "$file"'
+    fi
   fi
 }
 
@@ -303,7 +316,6 @@ cat <<EOF
 EOF
 [[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"
 [[ $OS == Linux ]] && echo "    - Docker: sudo systemctl enable --now docker && sudo usermod -aG docker \$USER"
-[[ $OS == Linux && $DESKTOP == yes ]] && echo "    - AFFiNE: no está en Flathub, se instala a mano"
 [[ -d $BACKUP_DIR ]] && echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/~}"
 if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$REPO_STATUS_BEFORE" ]]; then
   warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/~} diff'"
