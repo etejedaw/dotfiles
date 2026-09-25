@@ -111,12 +111,17 @@ Para comprobar que quedó bien: `ls -la ~/.zshrc` tiene que mostrar `-> .dotfile
 
 `install.sh` decide según el sistema y el escritorio. El escritorio se detecta por lo que hay instalado (`plasmashell` o `gnome-shell`), así que funciona igual si lo ejecutas por SSH. En Fedora solo se soportan KDE y GNOME: si no encuentra ninguno de los dos, el script se detiene sin cambiar nada.
 
+Los programas de cada sistema están en el directorio `packages/` (ver [Listas de paquetes](#listas-de-paquetes)), y `packages/equivalencias.md` muestra qué programa cumple cada función en cada equipo.
+
+### Qué se sincroniza con Stow entre los equipos
+
+Los paquetes de Stow que se enlazan en cada equipo. Un cambio en uno de ellos llega a los demás equipos con un `git pull`.
+
 | | Fedora KDE | Fedora GNOME | Mac |
 |---|---|---|---|
 | `zsh git ssh claude herdr vscodium` | ✓ | ✓ | ✓ |
 | `konsole vicinae` | ✓ | | |
 | `hyper` | | | ✓ |
-| Apps de Flathub | ✓ | ✓ | |
 
 ### zsh
 
