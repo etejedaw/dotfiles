@@ -311,7 +311,7 @@ step "Listo. Pasos manuales pendientes:"
 cat <<EOF
     - gh auth login   (HTTPS y navegador)
     - Llaves SSH: copiarlas a ~/.ssh/ o generarlas, y crear ~/.ssh/config.d/hosts con los HostName
-    - Crear ~/.zshrc.local con tokens y cosas de este equipo
+    - Crear ~/.secrets (600) con los tokens y ~/.zshrc.local con lo de este equipo
     - Abrir una terminal nueva para cargar zsh
 EOF
 [[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"

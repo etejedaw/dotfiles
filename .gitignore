@@ -20,5 +20,6 @@ ssh/.ssh/*
 !ssh/.ssh/config
 *.pem
 .zshrc.local
+.secrets
 .smbcredentials
 **/.aws/credentials

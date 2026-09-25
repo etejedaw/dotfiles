@@ -77,7 +77,8 @@ Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `in
 - **GitHub:** `gh auth login` (HTTPS y navegador).
 - **Llaves SSH:** copiarlas a `~/.ssh/` desde el gestor de contraseñas, o generar nuevas y registrar la pública donde corresponda.
 - **IPs de los servidores:** crear `~/.ssh/config.d/hosts` (ver [SSH](#ssh)).
-- **Secretos y cosas de un solo equipo:** en `~/.zshrc.local`, que se carga al final de `.zshrc` y no está en el repo.
+- **Secretos:** tokens y contraseñas en `~/.secrets` (solo `export`, permisos 600).
+- **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`.
 - **Docker (Fedora):** `sudo systemctl enable --now docker && sudo usermod -aG docker $USER`.
 - **Mac:** `p10k configure` si los íconos no se ven bien.
 
@@ -118,7 +119,10 @@ Para comprobar que quedó bien: `ls -la ~/.zshrc` tiene que mostrar `-> .dotfile
 - `linux.zsh` o `mac.zsh`, según `uname`. Se cargan **antes** de Oh My Zsh, porque definen rutas que Oh My Zsh necesita al arrancar (los highlighters y el `FPATH` de Homebrew).
 - `aliases.zsh`, **después** de Oh My Zsh, para que mis alias (`ll`, `la`…) pisen los que trae.
 
-Al final se carga `~/.zshrc.local` si existe. Ahí van los tokens y todo lo que es de un solo equipo.
+Al final se cargan, si existen, dos archivos que no están en el repo:
+
+- `~/.secrets`: solo `export` de tokens y contraseñas, con permisos 600. Al tener solo variables, es fácil de guardar en el gestor de contraseñas y un script puede cargarlo sin arrastrar alias ni funciones.
+- `~/.zshrc.local`: alias, funciones y todo lo que es de un solo equipo. Se carga después de `~/.secrets`, así que puede usar sus variables.
 
 ### SSH
 
@@ -371,7 +375,7 @@ npx -y shellcheck install.sh      # errores comunes de bash
 ## Lo que queda fuera, a propósito
 
 - **Llaves SSH, IPs y servidores de clientes:** en el gestor de contraseñas y en `~/.ssh/config.d/`.
-- **Tokens y secretos:** en `~/.zshrc.local`.
+- **Tokens y secretos:** en `~/.secrets`.
 - **Código de terceros:** Oh My Zsh, Powerlevel10k, los plugins y nvm. Los instala `install.sh`.
 - **Configuración completa de KDE** (`kwinrc`, `plasma-*`…): cambia sola todo el tiempo.
 - **Historiales, cachés y logs.**

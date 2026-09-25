@@ -55,5 +55,8 @@ export PATH="./node_modules/.bin:$HOME/.local/bin:$PATH"
 # Aliases — despues de oh-my-zsh.sh, para pisar los que trae (ll, la, etc.)
 [[ -f $ZSH_CONFIG_DIR/aliases.zsh ]] && source $ZSH_CONFIG_DIR/aliases.zsh
 
-# Tokens, secretos y cosas de un solo equipo. NO está en el repo.
+# Tokens y contraseñas (solo export, permisos 600). NO está en el repo.
+[[ -f ~/.secrets ]] && source ~/.secrets
+
+# Alias, funciones y cosas de un solo equipo. NO está en el repo.
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
