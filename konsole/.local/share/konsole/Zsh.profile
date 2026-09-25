@@ -1,0 +1,8 @@
+[Appearance]
+Font=JetBrainsMono Nerd Font Mono,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+WordMode=true
+
+[General]
+Command=/usr/bin/zsh
+Name=Zsh
+Parent=FALLBACK/
