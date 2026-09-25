@@ -1,0 +1,24 @@
+# Revisa install.sh con shellcheck en cada push o pull request que lo cambie.
+# Usa npx, igual que en local, para que la versión de shellcheck sea la misma.
+name: Lint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - install.sh
+      - .github/workflows/lint.yml
+  pull_request:
+    paths:
+      - install.sh
+      - .github/workflows/lint.yml
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: npx -y shellcheck install.sh

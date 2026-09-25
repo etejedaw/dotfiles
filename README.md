@@ -413,6 +413,8 @@ npx -y shellcheck install.sh      # errores comunes de bash
 ./install.sh --dry-run            # qué haría en este equipo
 ```
 
+GitHub también ejecuta `shellcheck` en cada push o pull request que cambie `install.sh` (`.github/workflows/lint.yml`). Si falla, GitHub te avisa por correo; ejecutarlo en local sirve para verlo antes del push.
+
 ## Lo que queda fuera, a propósito
 
 - **Llaves SSH, IPs y servidores de clientes:** en el gestor de contraseñas y en `~/.ssh/config.d/`.
