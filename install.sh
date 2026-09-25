@@ -54,6 +54,9 @@ fi
 
 step "Sistema: $OS · escritorio: $DESKTOP · KDE: $KDE · dry-run: $DRY_RUN"
 
+# Estado del repo al empezar: al final se avisa si algún instalador modificó archivos del repo
+REPO_STATUS_BEFORE=$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)
+
 # --- 1. Paquetes ---
 
 install_mac_packages() {
@@ -235,7 +238,17 @@ else
   set -u
 fi
 
-# --- 6. Extensiones de VSCodium ---
+# --- 6. Claude Code ---
+
+step "Claude Code"
+if [[ -x $HOME/.local/bin/claude ]]; then
+  info "ya instalado"
+else
+  # Con ~/.local/bin en el PATH el instalador no tiene que agregarlo a la config de la shell (ya lo hace .zshrc)
+  run env PATH="$HOME/.local/bin:$PATH" bash -c 'curl -fsSL https://claude.ai/install.sh | bash'
+fi
+
+# --- 7. Extensiones de VSCodium ---
 
 if [[ $DESKTOP == yes ]]; then
   step "Extensiones de VSCodium"
@@ -257,7 +270,7 @@ if [[ $DESKTOP == yes ]]; then
   fi
 fi
 
-# --- 7. Shell por defecto ---
+# --- 8. Shell por defecto ---
 
 step "Shell por defecto"
 if [[ "$(basename "${SHELL:-}")" == zsh ]]; then
@@ -266,7 +279,7 @@ else
   run chsh -s "$(command -v zsh)"
 fi
 
-# --- 8. Pasos manuales ---
+# --- 9. Pasos manuales ---
 
 step "Listo. Pasos manuales pendientes:"
 cat <<EOF
@@ -279,4 +292,7 @@ EOF
 [[ $OS == Linux ]] && echo "    - Docker: sudo systemctl enable --now docker && sudo usermod -aG docker \$USER"
 [[ $OS == Linux && $DESKTOP == yes ]] && echo "    - AFFiNE: no está en Flathub, se instala a mano"
 [[ -d $BACKUP_DIR ]] && echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/~}"
+if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$REPO_STATUS_BEFORE" ]]; then
+  warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/~} diff'"
+fi
 exit 0
