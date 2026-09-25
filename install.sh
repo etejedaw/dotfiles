@@ -248,6 +248,19 @@ else
   run env PATH="$HOME/.local/bin:$PATH" bash -c 'curl -fsSL https://claude.ai/install.sh | bash'
 fi
 
+step "Skills de Claude"
+if [[ -e $HOME/.claude/skills/herdr ]]; then
+  info "herdr ya instalada"
+else
+  run npx -y skills@latest add herdrdev/herdr --skill herdr -g -a claude-code -y
+fi
+if [[ -e $HOME/.claude/skills/find-docs ]]; then
+  info "Context7 ya configurado"
+else
+  # Modo CLI + skill (sin servidor MCP). Abre el navegador para iniciar sesión en Context7.
+  run npx -y ctx7@latest setup --claude --cli -y
+fi
+
 # --- 7. Extensiones de VSCodium ---
 
 if [[ $DESKTOP == yes ]]; then
