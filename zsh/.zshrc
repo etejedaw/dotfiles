@@ -18,6 +18,7 @@ zstyle ':omz:update' frequency 7
 plugins=(
   git
   git-flow
+  git-auto-fetch
   nvm
   npm
   gh
@@ -32,6 +33,9 @@ plugins=(
 export NVM_DIR="$HOME/.nvm"
 zstyle ':omz:plugins:nvm' autoload yes
 zstyle ':omz:plugins:nvm' silent-autoload yes
+
+# git-auto-fetch — fetch en segundo plano al mostrar el prompt, como mucho cada 120s por repo
+GIT_AUTO_FETCH_INTERVAL=120
 
 # Config por sistema — antes de oh-my-zsh.sh, porque define
 # ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR y FPATH (compinit corre dentro de oh-my-zsh)
