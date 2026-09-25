@@ -78,8 +78,9 @@ install_mac_packages() {
     run brew tap "${p%/*}"
     run brew trust "$p"
   done
+  # Solo instala lo que falta: las actualizaciones quedan para autoupdate (algunos casks piden sudo al actualizar)
   # shellcheck disable=SC2086
-  [[ -n $pkgs ]] && run brew install $pkgs
+  [[ -n $pkgs ]] && run env HOMEBREW_NO_INSTALL_UPGRADE=1 brew install $pkgs
 
   step "Actualizaciones automáticas de Homebrew"
   if brew autoupdate status 2>/dev/null | grep -q 'installed and running'; then
