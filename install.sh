@@ -59,6 +59,8 @@ REPO_STATUS_BEFORE=$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)
 
 # --- 1. Paquetes ---
 
+DOCKER_GROUP_ADDED=no  # si es yes, al final se avisa que hay que volver a entrar
+
 install_mac_packages() {
   if ! command -v brew >/dev/null; then
     step "Instalando Homebrew"
@@ -114,6 +116,20 @@ install_fedora_packages() {
     run sudo dnf install -y "${missing[@]}"
   else
     info "todo instalado"
+  fi
+
+  step "Docker"
+  if systemctl is-enabled --quiet docker 2>/dev/null && systemctl is-active --quiet docker; then
+    info "servicio ya activo"
+  else
+    run sudo systemctl enable --now docker
+  fi
+  # id -nG "$USER" lee los grupos guardados, no los de la sesión actual (que no cambian hasta volver a entrar)
+  if id -nG "$USER" | tr ' ' '\n' | grep -qx docker; then
+    info "$USER ya está en el grupo docker"
+  else
+    run sudo usermod -aG docker "$USER"
+    DOCKER_GROUP_ADDED=yes
   fi
 
   step "Apps de Flathub"
@@ -353,7 +369,7 @@ cat <<EOF
 EOF
 [[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"
 [[ $OS == Darwin ]] && echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
-[[ $OS == Linux ]] && echo "    - Docker: sudo systemctl enable --now docker && sudo usermod -aG docker \$USER"
+[[ $DOCKER_GROUP_ADDED == yes ]] && echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
 [[ -d $BACKUP_DIR ]] && echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/~}"
 if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$REPO_STATUS_BEFORE" ]]; then
   warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/~} diff'"

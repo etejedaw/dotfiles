@@ -24,6 +24,7 @@ Además de los archivos de configuración, `install.sh` instala:
 - En Mac, las actualizaciones automáticas de Homebrew ([homebrew-autoupdate](https://github.com/DomT4/homebrew-autoupdate)): cada 12 horas y al iniciar sesión actualiza fórmulas y casks y limpia las versiones viejas.
 - En Fedora, AFFiNE, que no está en Flathub (en Mac viene de brew): descarga el `.flatpak` de su última versión en GitHub. Este no se actualiza con `flatpak update`; para actualizarlo, desinstálalo y vuelve a ejecutar `install.sh`.
 - En Fedora, [git-flow-next](https://github.com/gittower/git-flow-next), que no está en dnf: descarga el binario de su última versión en GitHub a `~/.local/bin`. No se actualiza solo; para actualizarlo, bórralo y vuelve a ejecutar `install.sh`. En Mac viene de brew.
+- En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS.
@@ -85,7 +86,7 @@ Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `in
 - **IPs de los servidores:** crear `~/.ssh/config.d/hosts` (ver [SSH](#ssh)).
 - **Secretos:** tokens y contraseñas en `~/.secrets` (solo `export`, permisos 600).
 - **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`, y configuración de git en `~/.gitconfig.local` (ver [git](#git)).
-- **Docker (Fedora):** `sudo systemctl enable --now docker && sudo usermod -aG docker $USER`.
+- **Docker (Fedora):** cerrar sesión y volver a entrar, si el script te acaba de agregar al grupo `docker`.
 - **Docker (Mac):** abrir Docker Desktop una vez para aceptar la licencia y terminar la instalación.
 - **Mac:** `p10k configure` si los íconos no se ven bien.
 
@@ -203,6 +204,9 @@ sudo dnf install -y dnf5-plugins
 # Repos externos (solo si no están ya en /etc/yum.repos.d/)
 for url in $(sed 's/#.*//' packages/dnf-repos); do sudo dnf config-manager addrepo --from-repofile="$url"; done
 sudo dnf install -y $(sed 's/#.*//' packages/common packages/dnf)
+# Docker: activar el servicio y usarlo sin sudo (hay que volver a entrar a la sesión)
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
 # Apps gráficas
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak install --user -y flathub $(sed 's/#.*//' packages/flatpak)
