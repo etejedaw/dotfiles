@@ -174,7 +174,7 @@ run chmod 700 "$HOME/.ssh" "$HOME/.ssh/config.d"
 for pkg in zsh git ssh claude; do stow_pkg "$pkg"; done
 if [[ $OS == Darwin ]]; then
   stow_pkg vscodium '\.var'
-  for pkg in hyper raycast; do stow_pkg "$pkg"; done
+  stow_pkg hyper
 else
   [[ $DESKTOP == yes ]] && stow_pkg vscodium 'Library'
   if [[ $KDE == yes ]]; then

@@ -16,7 +16,6 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) | Solo KDE |
 | `vicinae` | Configuración del lanzador Vicinae | Solo KDE |
 | `hyper` | Terminal Hyper (JetBrainsMono Nerd Font) | Solo Mac |
-| `raycast` | Lanzador del Mac | Solo Mac *(pendiente)* |
 
 Además de los archivos de configuración, `install.sh` instala:
 
@@ -111,7 +110,7 @@ Para comprobar que quedó bien: `ls -la ~/.zshrc` tiene que mostrar `-> .dotfile
 | `zsh git ssh claude` | ✓ | ✓ | ✓ | ✓ |
 | `vscodium` | ✓ | ✓ | | ✓ |
 | `konsole vicinae` | ✓ | | | |
-| `hyper raycast` | | | | ✓ |
+| `hyper` | | | | ✓ |
 | Apps de Flathub | ✓ | ✓ | | |
 
 ### zsh
