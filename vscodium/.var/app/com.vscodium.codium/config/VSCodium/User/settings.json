@@ -41,5 +41,8 @@
 	"js/ts.tsdk.path": "node_modules/typescript/lib",
 	"js/ts.tsdk.promptToUseWorkspaceVersion": true,
 	"eslint.useFlatConfig": true,
-	"editor.defaultFormatter": "esbenp.prettier-vscode"
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"json.schemaDownload.trustedDomains": {
+		"https://vicinae.com/": true
+	}
 }
