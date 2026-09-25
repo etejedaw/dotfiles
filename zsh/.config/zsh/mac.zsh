@@ -1,3 +1,8 @@
+# brew en el PATH: en un Mac nuevo nada lo carga (no hay ~/.zprofile). Solo si falta, porque shellenv duplica rutas
+if ! command -v brew >/dev/null && [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+fi
+
 # HOMEBREW_PREFIX lo define `brew shellenv`; si falta, se consulta a brew
 BREW_PREFIX="${HOMEBREW_PREFIX:-$(brew --prefix)}"
 
