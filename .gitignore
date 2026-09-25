@@ -1,0 +1,21 @@
+tmp/
+
+# Sistema
+.DS_Store
+
+# Generados / estado
+*.log
+*.bak
+*.bak-*
+*.db
+*.db-*
+*.tbcache
+.zcompdump*
+
+# Secretos (por si acaso)
+.ssh/id_*
+.ssh/known_hosts*
+*.pem
+.zshrc.local
+.smbcredentials
+.aws/credentials
