@@ -129,6 +129,14 @@ install_fedora_packages() {
 
 if [[ $OS == Darwin ]]; then install_mac_packages; else install_fedora_packages; fi
 
+# Mismo instalador en Mac y Fedora: deja el binario en ~/.local/bin y se actualiza con `herdr update`
+step "herdr"
+if [[ -x $HOME/.local/bin/herdr ]]; then
+  info "ya instalado"
+else
+  run bash -c 'curl -fsSL https://herdr.dev/install.sh | sh'
+fi
+
 # --- 2. Symlinks con Stow ---
 
 # Si en ~ hay un archivo real donde va un symlink, Stow se niega. Se mueve a BACKUP_DIR.
@@ -171,7 +179,7 @@ step "Symlinks"
 run mkdir -p "$HOME/.ssh/config.d"
 run chmod 700 "$HOME/.ssh" "$HOME/.ssh/config.d"
 
-for pkg in zsh git ssh claude; do stow_pkg "$pkg"; done
+for pkg in zsh git ssh claude herdr; do stow_pkg "$pkg"; done
 if [[ $OS == Darwin ]]; then
   stow_pkg vscodium '\.var'
   stow_pkg hyper

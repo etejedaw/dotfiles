@@ -12,6 +12,7 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `git` | `.gitconfig` (usa `gh` para las credenciales de GitHub) | Todos |
 | `ssh` | `~/.ssh/config` con los alias de mis servidores, **sin IPs ni llaves** | Todos |
 | `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) | Todos |
+| `herdr` | `config.toml` de herdr, el multiplexor de agentes | Todos |
 | `vscodium` | `settings.json` de VSCodium y la lista de extensiones | Equipos con escritorio |
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) | Solo KDE |
 | `vicinae` | Configuración del lanzador Vicinae | Solo KDE |
@@ -24,6 +25,7 @@ Además de los archivos de configuración, `install.sh` instala:
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS.
+- herdr, con su propio instalador en Mac y en Fedora: queda en `~/.local/bin` y se actualiza con `herdr update`, no con `brew` ni `dnf`.
 - Claude Code con las skills de Context7 (modo CLI) y herdr.
 - Las extensiones de VSCodium.
 
@@ -35,6 +37,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── git/            .gitconfig
 ├── ssh/            .ssh/config
 ├── claude/         .claude/rules/markdown.md
+├── herdr/          .config/herdr/config.toml
 ├── vscodium/       settings.json (una sola copia para Linux y Mac) + extensions
 ├── konsole/        perfil de Konsole
 ├── vicinae/        settings.json de Vicinae
@@ -107,7 +110,7 @@ Para comprobar que quedó bien: `ls -la ~/.zshrc` tiene que mostrar `-> .dotfile
 
 | | Fedora KDE | Fedora GNOME | Fedora Server | Mac |
 |---|---|---|---|---|
-| `zsh git ssh claude` | ✓ | ✓ | ✓ | ✓ |
+| `zsh git ssh claude herdr` | ✓ | ✓ | ✓ | ✓ |
 | `vscodium` | ✓ | ✓ | | ✓ |
 | `konsole vicinae` | ✓ | | | |
 | `hyper` | | | | ✓ |
@@ -196,6 +199,13 @@ cd ~/.dotfiles
 brew install $(sed 's/#.*//' packages/common packages/brew)
 ```
 
+**Los dos:**
+
+```bash
+# herdr: su instalador lo deja en ~/.local/bin (se actualiza con `herdr update`)
+curl -fsSL https://herdr.dev/install.sh | sh
+```
+
 ### 2. Symlinks
 
 Si Stow se queja de un conflicto, es porque ya existe un archivo real en `~`: muévelo a otro lado (o bórralo si no lo necesitas) y vuelve a intentar.
@@ -203,7 +213,7 @@ Si Stow se queja de un conflicto, es porque ya existe un archivo real en `~`: mu
 ```bash
 cd ~/.dotfiles
 mkdir -p ~/.ssh/config.d && chmod 700 ~/.ssh ~/.ssh/config.d
-stow -t ~ --no-folding zsh git ssh claude
+stow -t ~ --no-folding zsh git ssh claude herdr
 chmod 600 ~/.dotfiles/ssh/.ssh/config
 
 # Linux con escritorio
