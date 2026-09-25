@@ -6,17 +6,19 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 
 ## Qué incluye
 
-| Paquete | Qué configura | Dónde se instala |
-|---|---|---|
-| `zsh` | zsh con Oh My Zsh, Powerlevel10k, nvm y alias | Todos |
-| `git` | `.gitconfig` (usa `gh` para las credenciales de GitHub) | Todos |
-| `ssh` | `~/.ssh/config` con los alias de mis servidores, **sin IPs ni llaves** | Todos |
-| `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) | Todos |
-| `herdr` | `config.toml` de herdr, el multiplexor de agentes | Todos |
-| `vscodium` | `settings.json` de VSCodium y la lista de extensiones | Todos |
-| `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) | Solo KDE |
-| `vicinae` | Configuración del lanzador Vicinae | Solo KDE |
-| `hyper` | Terminal Hyper (JetBrainsMono Nerd Font) | Solo Mac |
+| Paquete | Qué configura |
+|---|---|
+| `zsh` | zsh con Oh My Zsh, Powerlevel10k, nvm y alias |
+| `git` | `.gitconfig` (usa `gh` para las credenciales de GitHub) |
+| `ssh` | `~/.ssh/config` con los alias de mis servidores, **sin IPs ni llaves** |
+| `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) |
+| `herdr` | `config.toml` de herdr, el multiplexor de agentes |
+| `vscodium` | `settings.json` de VSCodium y la lista de extensiones |
+| `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) |
+| `vicinae` | Configuración del lanzador Vicinae |
+| `hyper` | Terminal Hyper (JetBrainsMono Nerd Font) |
+
+Para ver en qué equipo va cada paquete, mira [Qué se sincroniza con Stow entre los equipos](#qué-se-sincroniza-con-stow-entre-los-equipos).
 
 Además de los archivos de configuración, `install.sh` instala:
 
