@@ -84,7 +84,7 @@ Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `in
 - **Llaves SSH:** copiarlas a `~/.ssh/` desde el gestor de contraseñas, o generar nuevas y registrar la pública donde corresponda.
 - **IPs de los servidores:** crear `~/.ssh/config.d/hosts` (ver [SSH](#ssh)).
 - **Secretos:** tokens y contraseñas en `~/.secrets` (solo `export`, permisos 600).
-- **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`.
+- **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`, y configuración de git en `~/.gitconfig.local` (ver [git](#git)).
 - **Docker (Fedora):** `sudo systemctl enable --now docker && sudo usermod -aG docker $USER`.
 - **Docker (Mac):** abrir Docker Desktop una vez para aceptar la licencia y terminar la instalación.
 - **Mac:** `p10k configure` si los íconos no se ven bien.
@@ -130,6 +130,20 @@ Al final se cargan, si existen, dos archivos que no están en el repo:
 
 - `~/.secrets`: solo `export` de tokens y contraseñas, con permisos 600. Al tener solo variables, es fácil de guardar en el gestor de contraseñas y un script puede cargarlo sin arrastrar alias ni funciones.
 - `~/.zshrc.local`: alias, funciones y todo lo que es de un solo equipo. Se carga después de `~/.secrets`, así que puede usar sus variables.
+
+El plugin `git-auto-fetch` hace `git fetch --all` en segundo plano cada vez que aparece el prompt dentro de un repo, como mucho cada 120 segundos (`GIT_AUTO_FETCH_INTERVAL`). Así el prompt de Powerlevel10k muestra si hay commits nuevos en el remoto sin hacer fetch a mano. Para apagarlo en un repo (por ejemplo, con datos móviles), ejecuta `git-auto-fetch` dentro de él; el mismo comando lo vuelve a encender.
+
+### git
+
+`git/.gitconfig` es común a todos los equipos y, al final, incluye `~/.gitconfig.local` si existe. Ahí va lo que es de un solo equipo, y como se carga al último, pisa lo del repo.
+
+Como `~/.gitconfig` es un symlink al repo, `git config --global` escribe en el repo. Para lo local, usa `--file`:
+
+```bash
+git config --file ~/.gitconfig.local push.useForceIfIncludes true
+```
+
+Ese ejemplo es el que uso en el equipo donde hago rebase. Con `git-auto-fetch`, las referencias remotas se actualizan solas, y `git push --force-with-lease` puede pisar commits ajenos que nunca viste. `push.useForceIfIncludes` hace que además exija que esos commits estén integrados en tu rama.
 
 ### SSH
 
@@ -399,6 +413,7 @@ npx -y shellcheck install.sh      # errores comunes de bash
 
 - **Llaves SSH, IPs y servidores de clientes:** en el gestor de contraseñas y en `~/.ssh/config.d/`.
 - **Tokens y secretos:** en `~/.secrets`.
+- **Configuración de un solo equipo:** en `~/.zshrc.local` y `~/.gitconfig.local`.
 - **Código de terceros:** Oh My Zsh, Powerlevel10k, los plugins y nvm. Los instala `install.sh`.
 - **Configuración completa de KDE** (`kwinrc`, `plasma-*`…): cambia sola todo el tiempo.
 - **Historiales, cachés y logs.**
