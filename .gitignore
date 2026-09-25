@@ -13,9 +13,10 @@ tmp/
 .zcompdump*
 
 # Secretos (por si acaso)
-.ssh/id_*
-.ssh/known_hosts*
+**/.ssh/id_*
+**/.ssh/known_hosts*
+**/.ssh/config.d/
 *.pem
 .zshrc.local
 .smbcredentials
-.aws/credentials
+**/.aws/credentials
