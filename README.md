@@ -15,7 +15,8 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `vscodium` | `settings.json` de VSCodium y la lista de extensiones | Equipos con escritorio |
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) | Solo KDE |
 | `vicinae` | Configuración del lanzador Vicinae | Solo KDE |
-| `hyper`, `raycast` | Terminal y lanzador del Mac | Solo Mac *(pendiente)* |
+| `hyper` | Terminal Hyper (JetBrainsMono Nerd Font) | Solo Mac |
+| `raycast` | Lanzador del Mac | Solo Mac *(pendiente)* |
 
 Además de los archivos de configuración, `install.sh` instala:
 
@@ -38,6 +39,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── vscodium/       settings.json (una sola copia para Linux y Mac) + extensions
 ├── konsole/        perfil de Konsole
 ├── vicinae/        settings.json de Vicinae
+├── hyper/          .hyper.js
 ├── packages/       listas de lo que se instala en cada sistema
 ├── install.sh      instala y enlaza todo
 └── README.md
