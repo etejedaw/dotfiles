@@ -16,6 +16,8 @@ tmp/
 **/.ssh/id_*
 **/.ssh/known_hosts*
 **/.ssh/config.d/
+ssh/.ssh/*
+!ssh/.ssh/config
 *.pem
 .zshrc.local
 .smbcredentials
