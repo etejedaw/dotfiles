@@ -1,0 +1,5 @@
+# Repos externos de dnf. install.sh los agrega con
+# `sudo dnf config-manager addrepo --from-repofile=<url>` (necesita dnf5-plugins) antes de instalar dnf.
+
+https://download.docker.com/linux/fedora/docker-ce.repo
+https://cli.github.com/packages/rpm/gh-cli.repo

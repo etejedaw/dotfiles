@@ -1,0 +1,2 @@
+# Paquetes solo para Mac (Homebrew), además de `common`. Se completa en el Mac.
+# `brew install` detecta solo si es fórmula o cask. install.sh ignora comentarios y líneas vacías.
