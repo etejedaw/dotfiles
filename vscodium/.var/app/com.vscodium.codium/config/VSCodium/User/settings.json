@@ -1,0 +1,49 @@
+{
+	"terminal.integrated.defaultProfile.linux": "zsh",
+	"terminal.integrated.profiles.linux": {
+		"bash": {
+			"path": "/app/bin/host-spawn",
+			"args": [
+				"bash"
+			],
+			"icon": "terminal-bash",
+			"overrideName": true
+		},
+		"zsh": {
+			"path": "/app/bin/host-spawn",
+			"args": [
+				"zsh"
+			],
+			"icon": "terminal",
+			"overrideName": true
+		}
+	},
+	"workbench.iconTheme": "material-icon-theme",
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"prettier.trailingComma": "none",
+	"prettier.useTabs": true,
+	"prettier.arrowParens": "avoid",
+	"editor.formatOnSave": true,
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"material-icon-theme.activeIconPack": "nest",
+	"security.workspace.trust.untrustedFiles": "open",
+	"claudeCode.preferredLocation": "panel",
+	"claudeCode.useTerminal": true,
+	"editor.fontFamily": "\"JetBrainsMono Nerd Font Mono\", \"JetBrainsMono NFM\", monospace",
+	"editor.fontLigatures": true,
+	"terminal.integrated.fontFamily": "\"JetBrainsMono Nerd Font Mono\", \"JetBrainsMono NFM\", monospace",
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"typescript.enablePromptUseWorkspaceTsdk": true,
+	"eslint.useFlatConfig": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode"
+}
