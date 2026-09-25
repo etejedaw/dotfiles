@@ -28,6 +28,18 @@ run() {
   fi
 }
 
+# Pide la contraseña de sudo la primera vez que se necesita y la renueva cada minuto hasta que termina el script.
+# Así se escribe una sola vez y el script puede quedar solo. Si no hay nada que instalar, no la pide.
+SUDO_KEEPALIVE_PID=
+sudo_once() {
+  [[ $DRY_RUN == yes || -n $SUDO_KEEPALIVE_PID ]] && return
+  sudo -v
+  # Se detiene sola si el script muere; el trap la detiene apenas termina
+  while kill -0 "$$" 2>/dev/null; do sudo -n true; sleep 60; done >/dev/null 2>&1 &
+  SUDO_KEEPALIVE_PID=$!
+  trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
+}
+
 # Lee una lista de packages/ sin comentarios ni líneas vacías
 list() { sed 's/#.*//' "$PACKAGES/$1" | xargs -n1; }
 
@@ -64,6 +76,7 @@ DOCKER_GROUP_ADDED=no  # si es yes, al final se avisa que hay que volver a entra
 install_mac_packages() {
   if ! command -v brew >/dev/null; then
     step "Instalando Homebrew"
+    sudo_once
     run /bin/bash -c '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
   fi
   for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
@@ -81,8 +94,17 @@ install_mac_packages() {
     run brew trust "$p"
   done
   # Solo instala lo que falta: las actualizaciones quedan para autoupdate (algunos casks piden sudo al actualizar)
-  # shellcheck disable=SC2086
-  [[ -n $pkgs ]] && run env HOMEBREW_NO_INSTALL_UPGRADE=1 brew install $pkgs
+  local installed missing=()
+  installed=$( (brew list --formula -1; brew list --cask -1) 2>/dev/null)
+  for p in $pkgs; do
+    grep -qx "${p##*/}" <<<"$installed" || missing+=("$p")
+  done
+  if (( ${#missing[@]} )); then
+    sudo_once
+    run env HOMEBREW_NO_INSTALL_UPGRADE=1 brew install "${missing[@]}"
+  else
+    info "todo instalado"
+  fi
 
   step "Actualizaciones automáticas de Homebrew"
   if brew autoupdate status 2>/dev/null | grep -q 'installed and running'; then
@@ -97,12 +119,13 @@ install_mac_packages() {
 
 install_fedora_packages() {
   step "Repos de dnf"
-  rpm -q dnf5-plugins >/dev/null || run sudo dnf install -y dnf5-plugins
+  rpm -q dnf5-plugins >/dev/null || { sudo_once; run sudo dnf install -y dnf5-plugins; }
   local url
   for url in $(list dnf-repos); do
     if [[ -f /etc/yum.repos.d/$(basename "$url") ]]; then
       info "ya existe: $(basename "$url")"
     else
+      sudo_once
       run sudo dnf config-manager addrepo --from-repofile="$url"
     fi
   done
@@ -113,6 +136,7 @@ install_fedora_packages() {
     rpm -q "$p" >/dev/null 2>&1 || missing+=("$p")
   done
   if (( ${#missing[@]} )); then
+    sudo_once
     run sudo dnf install -y "${missing[@]}"
   else
     info "todo instalado"
@@ -122,12 +146,14 @@ install_fedora_packages() {
   if systemctl is-enabled --quiet docker 2>/dev/null && systemctl is-active --quiet docker; then
     info "servicio ya activo"
   else
+    sudo_once
     run sudo systemctl enable --now docker
   fi
   # id -nG "$USER" lee los grupos guardados, no los de la sesión actual (que no cambian hasta volver a entrar)
   if id -nG "$USER" | tr ' ' '\n' | grep -qx docker; then
     info "$USER ya está en el grupo docker"
   else
+    sudo_once
     run sudo usermod -aG docker "$USER"
     DOCKER_GROUP_ADDED=yes
   fi
@@ -355,7 +381,9 @@ step "Shell por defecto"
 if [[ "$(basename "${SHELL:-}")" == zsh ]]; then
   info "ya es zsh"
 else
-  run chsh -s "$(command -v zsh)"
+  # Con sudo, chsh no pide otra vez la contraseña
+  sudo_once
+  run sudo chsh -s "$(command -v zsh)" "$USER"
 fi
 
 # --- 9. Pasos manuales ---

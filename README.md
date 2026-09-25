@@ -73,7 +73,7 @@ El repo se llama `dotfiles`, pero por convención se clona en `~/.dotfiles` (con
 
 En un equipo nuevo todavía no hay llave SSH, por eso el clone va por HTTPS. Si el repo fuera privado, primero `gh auth login` y después `gh repo clone etejedaw/dotfiles ~/.dotfiles`.
 
-`install.sh` se puede ejecutar todas las veces que quieras: cada paso revisa si ya está hecho antes de hacerlo. Pide `sudo` cuando lo necesita (para `dnf`), pero **no** se ejecuta como root.
+`install.sh` se puede ejecutar todas las veces que quieras: cada paso revisa si ya está hecho antes de hacerlo. Pide `sudo` cuando lo necesita, pero **no** se ejecuta como root. La contraseña se pide una sola vez, la primera vez que hace falta (en un equipo nuevo, a los pocos segundos de arrancar), y se renueva sola hasta que el script termina, así que después puedes dejarlo solo. Si no hay nada que instalar, no la pide.
 
 Si en `~` ya existe un archivo real donde tiene que ir un symlink (por ejemplo, el `.zshrc` que trae el sistema), el script no lo borra: lo mueve a `~/.dotfiles-backup/<fecha>/`.
 
@@ -383,6 +383,7 @@ El script va de arriba abajo en secciones numeradas (`# --- 1. Paquetes ---`, `#
 | `info "texto"` / `warn "texto"` | Mensajes normales y avisos |
 | `run comando…` | Ejecuta el comando, o solo lo muestra con `--dry-run`. **Todo lo que cambie algo tiene que pasar por `run`** |
 | `list archivo` | Lee una lista de `packages/` sin comentarios |
+| `sudo_once` | Pide la contraseña de sudo si todavía no la pidió y la mantiene viva hasta el final. **Llámala antes de cada `run sudo …`** (o de un instalador que use sudo) |
 | `stow_pkg paquete [regex]` | Respalda los conflictos y enlaza el paquete. El segundo argumento es opcional y se pasa a `--ignore` |
 
 ### Agregar un paquete de Stow
