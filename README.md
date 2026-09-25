@@ -13,7 +13,7 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `ssh` | `~/.ssh/config` con los alias de mis servidores, **sin IPs ni llaves** | Todos |
 | `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) | Todos |
 | `herdr` | `config.toml` de herdr, el multiplexor de agentes | Todos |
-| `vscodium` | `settings.json` de VSCodium y la lista de extensiones | Equipos con escritorio |
+| `vscodium` | `settings.json` de VSCodium y la lista de extensiones | Todos |
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) | Solo KDE |
 | `vicinae` | Configuración del lanzador Vicinae | Solo KDE |
 | `hyper` | Terminal Hyper (JetBrainsMono Nerd Font) | Solo Mac |
@@ -109,15 +109,14 @@ Para comprobar que quedó bien: `ls -la ~/.zshrc` tiene que mostrar `-> .dotfile
 
 ### Qué se instala en cada equipo
 
-`install.sh` decide según el sistema y el escritorio. El escritorio se detecta por lo que hay instalado (`plasmashell` o `gnome-shell`), así que funciona igual si lo ejecutas por SSH.
+`install.sh` decide según el sistema y el escritorio. El escritorio se detecta por lo que hay instalado (`plasmashell` o `gnome-shell`), así que funciona igual si lo ejecutas por SSH. En Fedora solo se soportan KDE y GNOME: si no encuentra ninguno de los dos, el script se detiene sin cambiar nada.
 
-| | Fedora KDE | Fedora GNOME | Fedora Server | Mac |
-|---|---|---|---|---|
-| `zsh git ssh claude herdr` | ✓ | ✓ | ✓ | ✓ |
-| `vscodium` | ✓ | ✓ | | ✓ |
-| `konsole vicinae` | ✓ | | | |
-| `hyper` | | | | ✓ |
-| Apps de Flathub | ✓ | ✓ | | |
+| | Fedora KDE | Fedora GNOME | Mac |
+|---|---|---|---|
+| `zsh git ssh claude herdr vscodium` | ✓ | ✓ | ✓ |
+| `konsole vicinae` | ✓ | | |
+| `hyper` | | | ✓ |
+| Apps de Flathub | ✓ | ✓ | |
 
 ### zsh
 
@@ -181,7 +180,7 @@ Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`)
 | `packages/common` | Todos los equipos. Solo nombres que son iguales en dnf y en brew | `dnf` / `brew` |
 | `packages/dnf` | Fedora | `dnf install` |
 | `packages/dnf-repos` | Fedora: repos externos que se agregan antes (Docker, gh) | `dnf config-manager addrepo` |
-| `packages/flatpak` | Fedora con escritorio | `flatpak install flathub` |
+| `packages/flatpak` | Fedora | `flatpak install flathub` |
 | `packages/brew` | Mac (fórmulas y casks). Los de taps externos van como `<usuario>/<tap>/<paquete>` | `brew install` |
 | `packages/equivalencias.md` | Qué programa cumple cada función en cada sistema | — |
 
@@ -199,7 +198,7 @@ sudo dnf install -y dnf5-plugins
 # Repos externos (solo si no están ya en /etc/yum.repos.d/)
 for url in $(sed 's/#.*//' packages/dnf-repos); do sudo dnf config-manager addrepo --from-repofile="$url"; done
 sudo dnf install -y $(sed 's/#.*//' packages/common packages/dnf)
-# Apps gráficas (solo con escritorio)
+# Apps gráficas
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak install --user -y flathub $(sed 's/#.*//' packages/flatpak)
 # AFFiNE: no está en Flathub, se instala el .flatpak de GitHub
@@ -242,7 +241,7 @@ mkdir -p ~/.ssh/config.d && chmod 700 ~/.ssh ~/.ssh/config.d
 stow -t ~ --no-folding zsh git ssh claude herdr
 chmod 600 ~/.dotfiles/ssh/.ssh/config
 
-# Linux con escritorio
+# Linux
 stow -t ~ --no-folding --ignore='Library' vscodium
 # Solo KDE
 stow -t ~ --no-folding konsole vicinae
@@ -364,7 +363,7 @@ Supongamos que quieres versionar la configuración de `btop`, que vive en `~/.co
 El script va de arriba abajo en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Antes de la primera sección:
 
 - **Variables:** `DOTFILES` (la carpeta del repo), `NVM_VERSION`, `BACKUP_DIR`…
-- **Detección:** `OS` (`Darwin` o `Linux`), `DESKTOP` y `KDE` (`yes` o `no`).
+- **Detección:** `OS` (`Darwin` o `Linux`) y `KDE` (`yes` o `no`).
 - **Funciones de ayuda:**
 
 | Función | Para qué |
@@ -399,7 +398,7 @@ fi
 
 - **Instaladores con `curl … | bash`:** ponlos entre comillas dentro de `run bash -c '…'`, para que con `--dry-run` no se descarguen.
 - **Instaladores que escriben en `.zshrc`:** muchos lo hacen (nvm, por ejemplo). Como `.zshrc` es un archivo del repo, busca en su documentación cómo evitarlo, como el `PROFILE=/dev/null` de nvm. Si alguno se cuela igual, al terminar el script avisa que hay archivos del repo modificados.
-- **Pasos que dependen del sistema:** usa `[[ $OS == Darwin ]]`, `[[ $DESKTOP == yes ]]` o `[[ $KDE == yes ]]`.
+- **Pasos que dependen del sistema:** usa `[[ $OS == Darwin ]]` o `[[ $KDE == yes ]]`.
 
 ### Probar los cambios
 

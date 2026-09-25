@@ -42,17 +42,17 @@ case "$OS" in
 esac
 [[ $EUID -eq 0 ]] && { echo "No ejecutes install.sh como root: usa tu usuario (pide sudo cuando lo necesita)." >&2; exit 1; }
 
-# Escritorio: se detecta por lo instalado, así funciona también por SSH
-KDE=no; DESKTOP=no
-if [[ $OS == Darwin ]]; then
-  DESKTOP=yes
-elif command -v plasmashell >/dev/null; then
-  KDE=yes; DESKTOP=yes
-elif command -v gnome-shell >/dev/null; then
-  DESKTOP=yes
+# Escritorio: se detecta por lo instalado, así funciona también por SSH. En Fedora solo se soportan KDE y GNOME.
+KDE=no
+if [[ $OS == Linux ]]; then
+  if command -v plasmashell >/dev/null; then
+    KDE=yes
+  elif ! command -v gnome-shell >/dev/null; then
+    echo "No se encontró KDE ni GNOME: solo se soporta Fedora con escritorio." >&2; exit 1
+  fi
 fi
 
-step "Sistema: $OS · escritorio: $DESKTOP · KDE: $KDE · dry-run: $DRY_RUN"
+step "Sistema: $OS · KDE: $KDE · dry-run: $DRY_RUN"
 
 # Estado del repo al empezar: al final se avisa si algún instalador modificó archivos del repo
 REPO_STATUS_BEFORE=$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)
@@ -116,32 +116,30 @@ install_fedora_packages() {
     info "todo instalado"
   fi
 
-  if [[ $DESKTOP == yes ]]; then
-    step "Apps de Flathub"
-    run flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-    local installed apps=() app
-    installed=$(flatpak list --app --columns=application)
-    for app in $(list flatpak); do
-      grep -qx "$app" <<<"$installed" || apps+=("$app")
-    done
-    if (( ${#apps[@]} )); then
-      run flatpak install --user -y --noninteractive flathub "${apps[@]}"
-    else
-      info "todo instalado"
-    fi
+  step "Apps de Flathub"
+  run flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  local installed apps=() app
+  installed=$(flatpak list --app --columns=application)
+  for app in $(list flatpak); do
+    grep -qx "$app" <<<"$installed" || apps+=("$app")
+  done
+  if (( ${#apps[@]} )); then
+    run flatpak install --user -y --noninteractive flathub "${apps[@]}"
+  else
+    info "todo instalado"
+  fi
 
-    # No está en Flathub: se instala el .flatpak de la última versión en GitHub (no se actualiza con flatpak update)
-    step "AFFiNE (.flatpak de GitHub)"
-    if flatpak info pro.affine.app >/dev/null 2>&1; then
-      info "ya instalado"
-    else
-      run bash -c 'set -e
-        url=$(curl -fsSL https://api.github.com/repos/toeverything/AFFiNE/releases/latest | grep -o "https://[^\"]*linux-x64\.flatpak" | head -1)
-        file=$(mktemp --suffix=.flatpak)
-        curl -fsSL "$url" -o "$file"
-        flatpak install --user -y --noninteractive "$file"
-        rm -f "$file"'
-    fi
+  # No está en Flathub: se instala el .flatpak de la última versión en GitHub (no se actualiza con flatpak update)
+  step "AFFiNE (.flatpak de GitHub)"
+  if flatpak info pro.affine.app >/dev/null 2>&1; then
+    info "ya instalado"
+  else
+    run bash -c 'set -e
+      url=$(curl -fsSL https://api.github.com/repos/toeverything/AFFiNE/releases/latest | grep -o "https://[^\"]*linux-x64\.flatpak" | head -1)
+      file=$(mktemp --suffix=.flatpak)
+      curl -fsSL "$url" -o "$file"
+      flatpak install --user -y --noninteractive "$file"
+      rm -f "$file"'
   fi
 
   # No está en dnf: se descarga el binario de la última versión en GitHub (no se actualiza solo)
@@ -219,7 +217,7 @@ if [[ $OS == Darwin ]]; then
   stow_pkg vscodium '\.var'
   stow_pkg hyper
 else
-  [[ $DESKTOP == yes ]] && stow_pkg vscodium 'Library'
+  stow_pkg vscodium 'Library'
   if [[ $KDE == yes ]]; then
     for pkg in konsole vicinae; do stow_pkg "$pkg"; done
   fi
@@ -228,23 +226,21 @@ run chmod 600 "$DOTFILES/ssh/.ssh/config"
 
 # --- 3. Fuente ---
 
-if [[ $DESKTOP == yes ]]; then
-  step "Fuente JetBrainsMono Nerd Font"
-  if [[ $OS == Darwin ]]; then
-    if brew list --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1; then
-      info "ya instalada"
-    else
-      run brew install --cask font-jetbrains-mono-nerd-font
-    fi
+step "Fuente JetBrainsMono Nerd Font"
+if [[ $OS == Darwin ]]; then
+  if brew list --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1; then
+    info "ya instalada"
   else
-    FONT_DIR="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
-    if compgen -G "$FONT_DIR/*.ttf" >/dev/null; then
-      info "ya instalada"
-    else
-      run mkdir -p "$FONT_DIR"
-      run bash -c "curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz | tar -xJ -C '$FONT_DIR'"
-      run fc-cache -f
-    fi
+    run brew install --cask font-jetbrains-mono-nerd-font
+  fi
+else
+  FONT_DIR="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
+  if compgen -G "$FONT_DIR/*.ttf" >/dev/null; then
+    info "ya instalada"
+  else
+    run mkdir -p "$FONT_DIR"
+    run bash -c "curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz | tar -xJ -C '$FONT_DIR'"
+    run fc-cache -f
   fi
 fi
 
@@ -319,24 +315,22 @@ fi
 
 # --- 7. Extensiones de VSCodium ---
 
-if [[ $DESKTOP == yes ]]; then
-  step "Extensiones de VSCodium"
-  if [[ $OS == Darwin ]]; then codium_cmd=(codium); else codium_cmd=(flatpak run com.vscodium.codium); fi
-  if [[ $OS == Darwin ]] && ! command -v codium >/dev/null; then
-    warn "VSCodium no está instalado: se omiten las extensiones"
-  elif [[ $OS == Linux ]] && ! flatpak info com.vscodium.codium >/dev/null 2>&1; then
-    warn "VSCodium no está instalado: se omiten las extensiones"
-  else
-    installed=$("${codium_cmd[@]}" --list-extensions 2>/dev/null || true)
-    while IFS= read -r ext; do
-      [[ -z $ext ]] && continue
-      if grep -qix "$ext" <<<"$installed"; then
-        info "ya instalada: $ext"
-      else
-        run "${codium_cmd[@]}" --install-extension "$ext"
-      fi
-    done < "$DOTFILES/vscodium/extensions"
-  fi
+step "Extensiones de VSCodium"
+if [[ $OS == Darwin ]]; then codium_cmd=(codium); else codium_cmd=(flatpak run com.vscodium.codium); fi
+if [[ $OS == Darwin ]] && ! command -v codium >/dev/null; then
+  warn "VSCodium no está instalado: se omiten las extensiones"
+elif [[ $OS == Linux ]] && ! flatpak info com.vscodium.codium >/dev/null 2>&1; then
+  warn "VSCodium no está instalado: se omiten las extensiones"
+else
+  installed=$("${codium_cmd[@]}" --list-extensions 2>/dev/null || true)
+  while IFS= read -r ext; do
+    [[ -z $ext ]] && continue
+    if grep -qix "$ext" <<<"$installed"; then
+      info "ya instalada: $ext"
+    else
+      run "${codium_cmd[@]}" --install-extension "$ext"
+    fi
+  done < "$DOTFILES/vscodium/extensions"
 fi
 
 # --- 8. Shell por defecto ---
