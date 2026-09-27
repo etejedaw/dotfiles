@@ -1,11 +1,11 @@
 # Paquetes solo para Mac (Homebrew), además de `common`.
 
 gittower/tap/git-flow-next
+bash
 
 hyper
 raycast
 vscodium
-mark-text
 brave-browser
 bruno
 dbgate

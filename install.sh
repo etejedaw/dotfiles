@@ -192,21 +192,21 @@ install_fedora_packages() {
   else
     info "todo instalado"
   fi
-
-  # AFFiNE, git-flow-next, balenaEtcher, Vicinae y su extensión para GNOME no están en dnf ni en Flathub:
-  # custom-packages los baja de GitHub.
-  # Solo instala los que faltan; las actualizaciones son a mano, con `custom-packages update`.
-  # Si falla (GitHub caído, por ejemplo), se avisa y el resto de la instalación sigue.
-  step "Programas de GitHub (custom-packages)"
-  local custom_packages="$DOTFILES/custom-packages/.local/bin/custom-packages"
-  if [[ $DRY_RUN == yes ]]; then
-    "$custom_packages" ls
-  else
-    "$custom_packages" install -y || warn "custom-packages falló: revisa ~/.local/state/dotfiles/custom-packages.log"
-  fi
 }
 
 if [[ $OS == Darwin ]]; then install_mac_packages; else install_fedora_packages; fi
+
+# custom-packages baja de GitHub lo que no está en dnf ni en Flathub (en Fedora: AFFiNE, git-flow-next, balenaEtcher,
+# Vicinae y su extensión para GNOME) o que Homebrew no deja instalar (en Mac: MarkText).
+# Solo instala los que faltan; las actualizaciones son a mano, con `custom-packages update`.
+# Si falla (GitHub caído, por ejemplo), se avisa y el resto de la instalación sigue.
+step "Programas de GitHub (custom-packages)"
+custom_packages="$DOTFILES/custom-packages/.local/bin/custom-packages"
+if [[ $DRY_RUN == yes ]]; then
+  "$custom_packages" ls || warn "custom-packages falló"
+else
+  "$custom_packages" install -y || warn "custom-packages falló: revisa ~/.local/state/dotfiles/custom-packages.log"
+fi
 
 # Mismo instalador en Mac y Fedora: deja el binario en ~/.local/bin y se actualiza con `herdr update`
 step "herdr"
@@ -258,14 +258,13 @@ step "Symlinks"
 run mkdir -p "$HOME/.ssh/config.d"
 run chmod 700 "$HOME/.ssh" "$HOME/.ssh/config.d"
 
-for pkg in zsh git ssh claude herdr; do stow_pkg "$pkg"; done
+# custom-packages deja el comando en ~/.local/bin, para `custom-packages update`
+for pkg in zsh git ssh claude herdr custom-packages; do stow_pkg "$pkg"; done
 if [[ $OS == Darwin ]]; then
   stow_pkg vscodium '\.var'
   stow_pkg hyper
 else
   stow_pkg vscodium 'Library'
-  # Deja el comando en ~/.local/bin, para `custom-packages update`
-  stow_pkg custom-packages
   stow_pkg vicinae
   if [[ $KDE == yes ]]; then stow_pkg konsole; fi
 fi

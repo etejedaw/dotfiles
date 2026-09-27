@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Instala y actualiza los programas de Fedora que se bajan de GitHub porque no están en dnf ni en Flathub.
-# dnf upgrade y flatpak update no los ven: este script compara la versión instalada con la última release.
+# Instala y actualiza los programas que se bajan de GitHub porque no están en dnf ni en Flathub (Fedora) o porque
+# Homebrew no los deja instalar (Mac). Los gestores de paquetes no los ven: este script compara la versión instalada
+# con la última release.
 #
 #   custom-packages ls            lista la versión instalada y la última de cada uno, sin cambiar nada
 #   custom-packages update [-y]   actualiza los instalados que tienen versión nueva (-y: sin preguntar)
@@ -12,9 +13,16 @@
 # shellcheck disable=SC2034  # las variables <programa>_* se leen con ${!var}
 set -euo pipefail
 
+# Los arreglos asociativos piden bash 4 o más; el /bin/bash de Mac es 3.2 (el nuevo viene de brew)
+(( BASH_VERSINFO[0] >= 4 )) || { echo "custom-packages necesita bash 4 o más (en Mac: brew install bash)." >&2; exit 1; }
+
 BIN="$HOME/.local/bin"
 LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/custom-packages.log"
-PKGS=(affine gitflow etcher vicinae)  # en GNOME se agrega vicinaegnome, la extensión de Vicinae
+if [[ $(uname) == Darwin ]]; then
+  PKGS=(marktext)
+else
+  PKGS=(affine gitflow etcher vicinae)  # en GNOME se agrega vicinaegnome, la extensión de Vicinae
+fi
 
 # --- Programas ---
 # Cada uno define: nombre, repo de GitHub, regex del archivo de la release, versión instalada
@@ -71,6 +79,23 @@ vicinaegnome_version() {
 }
 vicinaegnome_install() { gnome-extensions install --force "$1"; }
 command -v gnome-shell >/dev/null && PKGS+=(vicinaegnome)
+
+# Solo en Mac: Homebrew desactivó su cask porque no pasa Gatekeeper (la app tiene firma ad-hoc, sin notarizar).
+# Bajada con curl no queda en cuarentena, así que abre sin el aviso de Gatekeeper.
+marktext_name=MarkText
+marktext_repo=marktext/marktext
+case "$(uname -m)" in
+  arm64) marktext_asset='mac-arm64-.*\.zip$' ;;
+  *) marktext_asset='mac-x64-.*\.zip$' ;;
+esac
+MARKTEXT_APP=/Applications/marktext.app
+marktext_version() { [[ -d $MARKTEXT_APP ]] && { plutil -extract CFBundleShortVersionString raw "$MARKTEXT_APP/Contents/Info.plist" 2>/dev/null || echo '?'; } || true; }
+# Se descomprime aparte y reemplaza la app entera, para no mezclar archivos de dos versiones
+marktext_install() {
+  local dir
+  dir="$(dirname "$1")/marktext"
+  ditto -x -k "$1" "$dir" && rm -rf "$MARKTEXT_APP" && mv "$dir/marktext.app" "$MARKTEXT_APP"
+}
 
 # --- Utilidades ---
 
@@ -144,8 +169,6 @@ on_exit() {
 trap on_exit EXIT
 
 # --- Comandos ---
-
-[[ $(uname) == Linux ]] || { echo "custom-packages es solo para Fedora." >&2; exit 1; }
 
 ARGS="$*"
 CMD=${1:-}
