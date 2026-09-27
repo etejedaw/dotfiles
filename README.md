@@ -187,9 +187,9 @@ Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`)
 |---|---|---|
 | `packages/common` | Todos los equipos. Solo nombres que son iguales en dnf y en brew | `dnf` / `brew` |
 | `packages/dnf` | Fedora | `dnf install` |
-| `packages/dnf-repos` | Fedora: repos externos que se agregan antes (Docker, gh) | `dnf config-manager addrepo` |
+| `packages/dnf-repos` | Fedora: repos externos que se agregan antes (Docker, gh). Necesita `dnf5-plugins`, que `install.sh` instala primero | `dnf config-manager addrepo --from-repofile` |
 | `packages/flatpak` | Fedora | `flatpak install flathub` |
-| `packages/brew` | Mac (fórmulas y casks). Los de taps externos van como `<usuario>/<tap>/<paquete>` | `brew install` |
+| `packages/brew` | Mac (fórmulas y casks; `brew install` detecta cuál es cuál, no hace falta `--cask`). Los de taps externos van como `<usuario>/<tap>/<paquete>`, e `install.sh` les da confianza con `brew trust` antes de instalarlos | `brew install` |
 | `packages/equivalencias.md` | Qué programa cumple cada función en cada sistema | — |
 
 ## Instalación manual (sin `install.sh`)
