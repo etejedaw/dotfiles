@@ -24,9 +24,7 @@ Además de los archivos de configuración, `install.sh` instala:
 
 - Los paquetes de `packages/` (ver [Listas de paquetes](#listas-de-paquetes)).
 - En Mac, las actualizaciones automáticas de Homebrew ([homebrew-autoupdate](https://github.com/DomT4/homebrew-autoupdate)): cada 12 horas y al iniciar sesión actualiza fórmulas y casks y limpia las versiones viejas.
-- En Fedora, AFFiNE, que no está en Flathub (en Mac viene de brew): descarga el `.flatpak` de su última versión en GitHub. Este no se actualiza con `flatpak update`; para actualizarlo, desinstálalo y vuelve a ejecutar `install.sh`.
-- En Fedora, [git-flow-next](https://github.com/gittower/git-flow-next), que no está en dnf: descarga el binario de su última versión en GitHub a `~/.local/bin`. No se actualiza solo; para actualizarlo, bórralo y vuelve a ejecutar `install.sh`. En Mac viene de brew.
-- En Fedora, [balenaEtcher](https://github.com/balena-io/etcher), que no está en dnf ni en Flathub: descarga el `.rpm` de su última versión en GitHub y lo instala con dnf. No se actualiza con `dnf upgrade`; para actualizarlo, desinstálalo (`sudo dnf remove balena-etcher`) y vuelve a ejecutar `install.sh`.
+- En Fedora, el comando [`custom-packages`](#custom-packages), que instala y actualiza los programas que no están en dnf ni en Flathub desde su última release en GitHub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew) y [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`). `install.sh` solo deja el comando listo: los programas se instalan a mano con `custom-packages install` (queda en los pasos manuales del final).
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
@@ -48,6 +46,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── konsole/        perfil de Konsole
 ├── vicinae/        settings.json de Vicinae y atajo Meta+Shift+V al historial del portapapeles (KDE)
 ├── hyper/          .hyper.js
+├── custom-packages/ comando que instala y actualiza los programas de GitHub (Fedora)
 ├── packages/       listas de lo que se instala en cada sistema
 ├── install.sh      instala y enlaza todo
 └── README.md
@@ -80,6 +79,7 @@ Si en `~` ya existe un archivo real donde tiene que ir un symlink (por ejemplo, 
 
 Durante la instalación, Context7 abre el navegador para iniciar sesión. Es normal.
 
+
 ### Pasos manuales
 
 Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `install.sh` las lista:
@@ -91,6 +91,7 @@ Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `in
 - **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`, y configuración de git en `~/.gitconfig.local` (ver [git](#git)).
 - **Docker (Fedora):** cerrar sesión y volver a entrar, si el script te acaba de agregar al grupo `docker`.
 - **Docker (Mac):** abrir Docker Desktop una vez para aceptar la licencia y terminar la instalación.
+- **Programas de GitHub (Fedora):** `custom-packages install`, para AFFiNE, git-flow-next y balenaEtcher (ver [custom-packages](#custom-packages)).
 - **Mac:** `p10k configure` si los íconos no se ven bien.
 
 ## Cómo funciona
@@ -124,6 +125,7 @@ Los paquetes de Stow que se enlazan en cada equipo. Un cambio en uno de ellos ll
 | | Fedora KDE | Fedora GNOME | Mac |
 |---|---|---|---|
 | `zsh git ssh claude herdr vscodium` | ✓ | ✓ | ✓ |
+| `custom-packages` | ✓ | ✓ | |
 | `konsole vicinae` | ✓ | | |
 | `hyper` | | | ✓ |
 
@@ -201,6 +203,24 @@ Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`)
 | `packages/brew` | Mac (fórmulas y casks; `brew install` detecta cuál es cuál, no hace falta `--cask`). Los de taps externos van como `<usuario>/<tap>/<paquete>`, e `install.sh` les da confianza con `brew trust` antes de instalarlos | `brew install` |
 | `packages/equivalencias.md` | Qué programa cumple cada función en cada sistema | — |
 
+### custom-packages
+
+Algunos programas de Fedora no están en dnf ni en Flathub y se bajan de su release en GitHub: AFFiNE, git-flow-next y balenaEtcher. Como ni dnf ni flatpak los siguen, `custom-packages` compara la versión instalada con la última release y los instala o actualiza. `install.sh` lo enlaza en `~/.local/bin`, pero no lo ejecuta.
+
+```bash
+custom-packages check         # versión instalada y última de cada uno, sin cambiar nada
+custom-packages install       # instala los que faltan (en un equipo nuevo)
+custom-packages update -y     # actualiza los que tienen versión nueva; sin -y, pregunta antes
+```
+
+Para actualizar todo en Fedora:
+
+```bash
+sudo dnf upgrade -y && flatpak update -y && custom-packages update -y
+```
+
+Cada programa se define en el script con cinco cosas: nombre, repo de GitHub, regex del archivo de la release, cómo leer la versión instalada y cómo instalar el archivo descargado. Para agregar uno, copia un bloque existente y agrega su clave a `PKGS`. La versión de AFFiNE se lee del metainfo de la app, porque flatpak no guarda la de un `.flatpak` suelto. balenaEtcher pide `sudo` al instalarse, porque usa `dnf`.
+
 ## Instalación manual (sin `install.sh`)
 
 Si por alguna razón no puedes usar el script, estos son los mismos pasos a mano. Ejecútalos en orden.
@@ -221,15 +241,8 @@ sudo usermod -aG docker $USER
 # Apps gráficas
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak install --user -y flathub $(sed 's/#.*//' packages/flatpak)
-# AFFiNE: no está en Flathub, se instala el .flatpak de GitHub
-curl -fsSL -o /tmp/affine.flatpak "$(curl -fsSL https://api.github.com/repos/toeverything/AFFiNE/releases/latest | grep -o 'https://[^"]*linux-x64\.flatpak' | head -1)"
-flatpak install --user -y /tmp/affine.flatpak
-# git-flow-next: no está en dnf, se descarga el binario de GitHub (cambia amd64 por arm64 en ARM)
-mkdir -p ~/.local/bin
-curl -fsSL "$(curl -fsSL https://api.github.com/repos/gittower/git-flow-next/releases/latest | grep -o 'https://[^"]*linux-amd64\.tar\.gz' | head -1)" | tar -xz -C ~/.local/bin git-flow
-# balenaEtcher: no está en dnf ni en Flathub, se instala el .rpm de GitHub
-curl -fsSL -o /tmp/balena-etcher.rpm "$(curl -fsSL https://api.github.com/repos/balena-io/etcher/releases/latest | grep -o 'https://[^"]*x86_64\.rpm' | head -1)"
-sudo dnf install -y /tmp/balena-etcher.rpm
+# AFFiNE, git-flow-next y balenaEtcher: no están en dnf ni en Flathub, se bajan de GitHub
+./custom-packages/.local/bin/custom-packages install
 ```
 
 **Mac:**
@@ -266,6 +279,7 @@ chmod 600 ~/.dotfiles/ssh/.ssh/config
 
 # Linux
 stow -t ~ --no-folding --ignore='Library' vscodium
+stow -t ~ --no-folding custom-packages
 # Solo KDE
 stow -t ~ --no-folding konsole vicinae
 
@@ -345,6 +359,7 @@ Después, los [pasos manuales](#pasos-manuales) y abrir una terminal nueva.
 
 - **Cambiaste algo en un equipo:** como es un symlink, ya estás editando el repo. `git add`, `git commit` y `git push`.
 - **En los demás equipos:** `git pull`. Si el cambio agregó un paquete de Stow o un programa nuevo, vuelve a ejecutar `./install.sh`.
+- **Actualizar los programas en Fedora:** `sudo dnf upgrade -y`, `flatpak update -y` y `custom-packages update -y` (ver [custom-packages](#custom-packages)).
 - **Instalaste un programa nuevo:** agrégalo a su lista en `packages/` y, si reemplaza a otro en otro sistema, a `packages/equivalencias.md`.
 - **Instalaste o quitaste una extensión de VSCodium:** regenera la lista con `flatpak run com.vscodium.codium --list-extensions > ~/.dotfiles/vscodium/extensions` (en Mac, `codium --list-extensions`).
 

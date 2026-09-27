@@ -1,4 +1,4 @@
-# Revisa install.sh con shellcheck en cada push o pull request que lo cambie.
+# Revisa install.sh y custom-packages con shellcheck en cada push o pull request que los cambie.
 # Usa npx, igual que en local, para que la versión de shellcheck sea la misma.
 name: Lint
 
@@ -7,10 +7,12 @@ on:
     branches: [main]
     paths:
       - install.sh
+      - custom-packages/.local/bin/custom-packages
       - .github/workflows/lint.yml
   pull_request:
     paths:
       - install.sh
+      - custom-packages/.local/bin/custom-packages
       - .github/workflows/lint.yml
 
 permissions:
@@ -21,4 +23,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: npx -y shellcheck install.sh
+      - run: npx -y shellcheck install.sh custom-packages/.local/bin/custom-packages

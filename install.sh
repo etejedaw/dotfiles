@@ -170,50 +170,6 @@ install_fedora_packages() {
   else
     info "todo instalado"
   fi
-
-  # No está en Flathub: se instala el .flatpak de la última versión en GitHub (no se actualiza con flatpak update)
-  step "AFFiNE (.flatpak de GitHub)"
-  if flatpak info pro.affine.app >/dev/null 2>&1; then
-    info "ya instalado"
-  else
-    run bash -c 'set -e
-      url=$(curl -fsSL https://api.github.com/repos/toeverything/AFFiNE/releases/latest | grep -o "https://[^\"]*linux-x64\.flatpak" | head -1)
-      file=$(mktemp --suffix=.flatpak)
-      curl -fsSL "$url" -o "$file"
-      flatpak install --user -y --noninteractive "$file"
-      rm -f "$file"'
-  fi
-
-  # No está en dnf: se descarga el binario de la última versión en GitHub (no se actualiza solo)
-  step "git-flow-next (binario de GitHub)"
-  if [[ -x $HOME/.local/bin/git-flow ]]; then
-    info "ya instalado"
-  else
-    local arch
-    case "$(uname -m)" in
-      aarch64) arch=arm64 ;;
-      *) arch=amd64 ;;
-    esac
-    # shellcheck disable=SC2016  # las variables las expande el bash -c, no este script
-    run env ARCH="$arch" bash -c 'set -e
-      url=$(curl -fsSL https://api.github.com/repos/gittower/git-flow-next/releases/latest | grep -o "https://[^\"]*linux-$ARCH\.tar\.gz" | head -1)
-      mkdir -p "$HOME/.local/bin"
-      curl -fsSL "$url" | tar -xz -C "$HOME/.local/bin" git-flow'
-  fi
-
-  # No está en dnf ni en Flathub: se instala el .rpm de la última versión en GitHub (no se actualiza con dnf upgrade)
-  step "balenaEtcher (.rpm de GitHub)"
-  if rpm -q balena-etcher >/dev/null 2>&1; then
-    info "ya instalado"
-  else
-    sudo_once
-    run bash -c 'set -e
-      url=$(curl -fsSL https://api.github.com/repos/balena-io/etcher/releases/latest | grep -o "https://[^\"]*x86_64\.rpm" | head -1)
-      file=$(mktemp --suffix=.rpm)
-      curl -fsSL "$url" -o "$file"
-      sudo dnf install -y "$file"
-      rm -f "$file"'
-  fi
 }
 
 if [[ $OS == Darwin ]]; then install_mac_packages; else install_fedora_packages; fi
@@ -274,6 +230,8 @@ if [[ $OS == Darwin ]]; then
   stow_pkg hyper
 else
   stow_pkg vscodium 'Library'
+  # Solo enlaza el comando: los programas de GitHub se instalan a mano con `custom-packages install`
+  stow_pkg custom-packages
   if [[ $KDE == yes ]]; then
     for pkg in konsole vicinae; do stow_pkg "$pkg"; done
   fi
@@ -427,6 +385,7 @@ cat <<EOF
     - Crear ~/.secrets (600) con los tokens y ~/.zshrc.local con lo de este equipo
     - Abrir una terminal nueva para cargar zsh
 EOF
+[[ $OS == Linux ]] && echo "    - custom-packages install   (AFFiNE, git-flow-next y balenaEtcher, de GitHub)"
 [[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"
 [[ $OS == Darwin ]] && echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
 [[ $DOCKER_GROUP_ADDED == yes ]] && echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
