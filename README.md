@@ -364,7 +364,7 @@ Después, los [pasos manuales](#pasos-manuales) y abrir una terminal nueva.
 - **Cambiaste algo en un equipo:** como es un symlink, ya estás editando el repo. `git add`, `git commit` y `git push`.
 - **En los demás equipos:** `git pull`. Si el cambio agregó un paquete de Stow o un programa nuevo, vuelve a ejecutar `./install.sh`.
 - **Actualizar los programas en Fedora:** `sudo dnf upgrade -y`, `flatpak update -y` y `custom-packages update -y` (ver [custom-packages](#custom-packages)).
-- **Instalaste un programa nuevo:** agrégalo a su lista en `packages/` y, si reemplaza a otro en otro sistema, a `packages/equivalencias.md`.
+- **Instalaste un programa nuevo:** agrégalo a su lista en `packages/` y, si reemplaza a otro en otro sistema, a `packages/equivalencias.md`. Si en Fedora no está en dnf ni en Flathub y se baja de GitHub, va en `custom-packages` (ver [custom-packages](#custom-packages)).
 - **Instalaste o quitaste una extensión de VSCodium:** regenera la lista con `flatpak run com.vscodium.codium --list-extensions > ~/.dotfiles/vscodium/extensions` (en Mac, `codium --list-extensions`).
 
 ## Agregar configuración nueva
@@ -410,7 +410,8 @@ Supongamos que quieres versionar la configuración de `btop`, que vive en `~/.co
 
 El script va de arriba abajo en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Antes de la primera sección:
 
-- **Variables:** `DOTFILES` (la carpeta del repo), `NVM_VERSION`, `BACKUP_DIR`…
+- **Variables:** `DOTFILES` (la carpeta del repo), `NVM_VERSION`, `BACKUP_DIR`, `LOG`…
+- **Log:** desde el principio, toda la salida va también a `LOG` (`~/.local/state/dotfiles/install.log`), y la trampa `ERR` anota el comando y la línea de cualquier error. `on_exit` corre al salir: detiene la renovación de sudo y, si hubo error, dice dónde está el log. Si un paso necesita hacer algo al salir, agrégalo a `on_exit`: otro `trap … EXIT` lo reemplazaría.
 - **Detección:** `OS` (`Darwin` o `Linux`) y `KDE` (`yes` o `no`).
 - **Funciones de ayuda:**
 
@@ -453,11 +454,12 @@ fi
 
 ```bash
 bash -n install.sh                # sintaxis
-npx -y shellcheck install.sh      # errores comunes de bash
+npx -y shellcheck install.sh custom-packages/.local/bin/custom-packages   # errores comunes de bash
 ./install.sh --dry-run            # qué haría en este equipo
+custom-packages ls                # si cambiaste custom-packages: que lea bien las versiones
 ```
 
-GitHub también ejecuta `shellcheck` en cada push o pull request que cambie `install.sh` (`.github/workflows/lint.yml`). Si falla, GitHub te avisa por correo; ejecutarlo en local sirve para verlo antes del push.
+GitHub también ejecuta `shellcheck` en cada push o pull request que cambie `install.sh` o `custom-packages` (`.github/workflows/lint.yml`). Si falla, GitHub te avisa por correo; ejecutarlo en local sirve para verlo antes del push.
 
 ## Lo que queda fuera, a propósito
 
