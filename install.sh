@@ -192,6 +192,17 @@ install_fedora_packages() {
   else
     info "todo instalado"
   fi
+
+  # AFFiNE, git-flow-next y balenaEtcher no están en dnf ni en Flathub: custom-packages los baja de GitHub.
+  # Solo instala los que faltan; las actualizaciones son a mano, con `custom-packages update`.
+  # Si falla (GitHub caído, por ejemplo), se avisa y el resto de la instalación sigue.
+  step "Programas de GitHub (custom-packages)"
+  local custom_packages="$DOTFILES/custom-packages/.local/bin/custom-packages"
+  if [[ $DRY_RUN == yes ]]; then
+    "$custom_packages" ls
+  else
+    "$custom_packages" install -y || warn "custom-packages falló: revisa ~/.local/state/dotfiles/custom-packages.log"
+  fi
 }
 
 if [[ $OS == Darwin ]]; then install_mac_packages; else install_fedora_packages; fi
@@ -252,7 +263,7 @@ if [[ $OS == Darwin ]]; then
   stow_pkg hyper
 else
   stow_pkg vscodium 'Library'
-  # Solo enlaza el comando: los programas de GitHub se instalan a mano con `custom-packages install`
+  # Deja el comando en ~/.local/bin, para `custom-packages update`
   stow_pkg custom-packages
   if [[ $KDE == yes ]]; then
     for pkg in konsole vicinae; do stow_pkg "$pkg"; done
@@ -407,7 +418,6 @@ cat <<EOF
     - Crear ~/.secrets (600) con los tokens y ~/.zshrc.local con lo de este equipo
     - Abrir una terminal nueva para cargar zsh
 EOF
-[[ $OS == Linux ]] && echo "    - custom-packages install   (AFFiNE, git-flow-next y balenaEtcher, de GitHub)"
 [[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"
 [[ $OS == Darwin ]] && echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
 [[ $DOCKER_GROUP_ADDED == yes ]] && echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"

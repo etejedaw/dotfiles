@@ -24,7 +24,7 @@ Además de los archivos de configuración, `install.sh` instala:
 
 - Los paquetes de `packages/` (ver [Listas de paquetes](#listas-de-paquetes)).
 - En Mac, las actualizaciones automáticas de Homebrew ([homebrew-autoupdate](https://github.com/DomT4/homebrew-autoupdate)): cada 12 horas y al iniciar sesión actualiza fórmulas y casks y limpia las versiones viejas.
-- En Fedora, el comando [`custom-packages`](#custom-packages), que instala y actualiza los programas que no están en dnf ni en Flathub desde su última release en GitHub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew) y [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`). `install.sh` solo deja el comando listo: los programas se instalan a mano con `custom-packages install` (queda en los pasos manuales del final).
+- En Fedora, el comando [`custom-packages`](#custom-packages), que instala y actualiza los programas que no están en dnf ni en Flathub desde su última release en GitHub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew) y [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`). `install.sh` instala los que falten con `custom-packages install -y`; las actualizaciones son a mano, con `custom-packages update`.
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
@@ -92,7 +92,6 @@ Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `in
 - **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`, y configuración de git en `~/.gitconfig.local` (ver [git](#git)).
 - **Docker (Fedora):** cerrar sesión y volver a entrar, si el script te acaba de agregar al grupo `docker`.
 - **Docker (Mac):** abrir Docker Desktop una vez para aceptar la licencia y terminar la instalación.
-- **Programas de GitHub (Fedora):** `custom-packages install`, para AFFiNE, git-flow-next y balenaEtcher (ver [custom-packages](#custom-packages)).
 - **Mac:** `p10k configure` si los íconos no se ven bien.
 
 ## Cómo funciona
@@ -206,13 +205,14 @@ Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`)
 
 ### custom-packages
 
-Algunos programas de Fedora no están en dnf ni en Flathub y se bajan de su release en GitHub: AFFiNE, git-flow-next y balenaEtcher. Como ni dnf ni flatpak los siguen, `custom-packages` compara la versión instalada con la última release y los instala o actualiza. `install.sh` lo enlaza en `~/.local/bin`, pero no lo ejecuta.
+Algunos programas de Fedora no están en dnf ni en Flathub y se bajan de su release en GitHub: AFFiNE, git-flow-next y balenaEtcher. Como ni dnf ni flatpak los siguen, `custom-packages` compara la versión instalada con la última release y los instala o actualiza. `install.sh` lo enlaza en `~/.local/bin` e instala los que falten (`custom-packages install -y`; con `--dry-run`, solo `custom-packages ls`). Nunca los actualiza: eso queda para `custom-packages update`. Si falla, por ejemplo porque GitHub no responde, `install.sh` avisa y sigue con el resto.
 
 ```bash
 custom-packages ls            # lista cada programa con su versión instalada y la última, sin cambiar nada
 custom-packages update        # muestra los que tienen versión nueva y pregunta antes de actualizarlos
 custom-packages update -y     # actualiza todos los que tienen versión nueva, sin preguntar
-custom-packages install       # instala los que faltan (en un equipo nuevo); con -y, sin preguntar
+custom-packages install       # instala los que faltan; con -y, sin preguntar (install.sh lo ejecuta así)
+custom-packages help          # la ayuda (también -h o --help)
 ```
 
 Para actualizar todo en Fedora:
