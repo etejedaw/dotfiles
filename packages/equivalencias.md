@@ -12,7 +12,7 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 | Calendario y tareas        | Calendario y Recordatorios      | KOrganizer                      | por definir                     |
 | Correo                     | Mail                            | Thunderbird (flatpak)           | Thunderbird (flatpak)           |
 | Editor                     | VSCodium (brew)                 | VSCodium (flatpak)              | VSCodium (flatpak)              |
-| Markdown                   | Typora (brew)                   | Typora (flatpak)                | Typora (flatpak)                |
+| Markdown                   | MarkText (brew)                 | MarkText (flatpak)              | MarkText (flatpak)              |
 | Navegador                  | Brave (brew)                    | Brave (flatpak)                 | Brave (flatpak)                 |
 | Cliente API                | Bruno (brew)                    | Bruno (flatpak)                 | Bruno (flatpak)                 |
 | Base de datos              | DBeaver (brew)                  | DBeaver (flatpak)               | DBeaver (flatpak)               |

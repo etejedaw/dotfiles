@@ -5,7 +5,7 @@ com.jgraph.drawio.desktop
 org.filezillaproject.Filezilla
 
 com.brave.Browser
-io.typora.Typora
+com.github.marktext.marktext
 org.mozilla.thunderbird
 org.onlyoffice.desktopeditors
 org.telegram.desktop
