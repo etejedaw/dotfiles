@@ -295,23 +295,28 @@ if [[ $OS == Linux && $KDE == no ]]; then
   }
 
   step "Vicinae en GNOME"
-  # La instala custom-packages; GNOME la carga al volver a entrar a la sesión
-  gsettings_add org.gnome.shell enabled-extensions vicinae@dagimg-dot
   # Arranca el servidor con la sesión gráfica. Sin --now: por SSH no hay sesión gráfica donde arrancarlo.
   if systemctl --user is-enabled --quiet vicinae.service 2>/dev/null; then
     info "servicio ya habilitado"
   else
     run systemctl --user enable vicinae.service
   fi
-  # Los mismos atajos que en KDE. GNOME usa Super+Espacio para cambiar el idioma del teclado: se deja solo en la
-  # tecla de idioma del teclado.
-  if [[ $(gsettings get org.gnome.desktop.wm.keybindings switch-input-source) == *"'<Super>space'"* ]]; then
-    run gsettings set org.gnome.desktop.wm.keybindings switch-input-source "['XF86Keyboard']"
-    run gsettings set org.gnome.desktop.wm.keybindings switch-input-source-backward "['<Shift>XF86Keyboard']"
+  # Sin sesión gráfica, gsettings no guarda los cambios (y no avisa)
+  if [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
+    warn "sin sesión gráfica (¿SSH?): la extensión y los atajos de Vicinae se aplicarán al ejecutar install.sh desde el escritorio"
+  else
+    # La instala custom-packages; GNOME la carga al volver a entrar a la sesión
+    gsettings_add org.gnome.shell enabled-extensions vicinae@dagimg-dot
+    # Los mismos atajos que en KDE. GNOME usa Super+Espacio para cambiar el idioma del teclado: se deja solo en la
+    # tecla de idioma del teclado.
+    if [[ $(gsettings get org.gnome.desktop.wm.keybindings switch-input-source) == *"'<Super>space'"* ]]; then
+      run gsettings set org.gnome.desktop.wm.keybindings switch-input-source "['XF86Keyboard']"
+      run gsettings set org.gnome.desktop.wm.keybindings switch-input-source-backward "['<Shift>XF86Keyboard']"
+    fi
+    gnome_shortcut vicinae Vicinae 'vicinae toggle' '<Super>space'
+    gnome_shortcut vicinae-clipboard 'Vicinae clipboard' \
+      'vicinae deeplink vicinae://launch/clipboard/history?toggle=true' '<Super><Shift>v'
   fi
-  gnome_shortcut vicinae Vicinae 'vicinae toggle' '<Super>space'
-  gnome_shortcut vicinae-clipboard 'Vicinae clipboard' \
-    'vicinae deeplink vicinae://launch/clipboard/history?toggle=true' '<Super><Shift>v'
 fi
 
 # La llave que ssh/.ssh/config usa para github.com. Sin passphrase, para que el script no se detenga a pedirla.
