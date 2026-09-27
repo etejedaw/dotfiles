@@ -1,5 +1,4 @@
 # Paquetes para TODOS los equipos, sin importar el sistema: mismo nombre en dnf y brew.
-# install.sh ignora comentarios y líneas vacías.
 
 zsh
 zsh-autosuggestions

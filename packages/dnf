@@ -1,5 +1,4 @@
 # Paquetes solo para Fedora (dnf), además de `common`.
-# install.sh ignora comentarios y líneas vacías.
 
 docker-ce
 docker-ce-cli
