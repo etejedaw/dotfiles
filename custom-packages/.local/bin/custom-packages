@@ -5,11 +5,15 @@
 #   custom-packages check         muestra la versión instalada y la última de cada uno, sin cambiar nada
 #   custom-packages update [-y]   actualiza los instalados que tienen versión nueva (-y: sin preguntar)
 #   custom-packages install [-y]  instala los que faltan
+#
+# update e install dejan lo que muestran, sin colores, en ~/.local/state/dotfiles/custom-packages.log (solo la última
+# ejecución).
 
 # shellcheck disable=SC2034  # las variables <programa>_* se leen con ${!var}
 set -euo pipefail
 
 BIN="$HOME/.local/bin"
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/custom-packages.log"
 PKGS=(affine gitflow etcher)
 
 # --- Programas ---
@@ -83,17 +87,17 @@ confirm() {
 }
 
 # Descarga el archivo de la release de cada programa y lo instala
+TMP=
 apply() {
-  local p name file tmp failed=0
-  tmp=$(mktemp -d)
-  trap 'rm -rf "$tmp"' EXIT
+  local p name file failed=0
+  TMP=$(mktemp -d)
   for p in "$@"; do
     name=${p}_name
     step "${!name} ${LATEST[$p]}"
     if [[ -z ${URL[$p]} ]]; then
       warn "la release no tiene un archivo que coincida"; failed=1; continue
     fi
-    file="$tmp/$(basename "${URL[$p]}")"
+    file="$TMP/$(basename "${URL[$p]}")"
     if curl -fL --progress-bar "${URL[$p]}" -o "$file" && "${p}_install" "$file"; then
       info "listo"
     else
@@ -105,10 +109,20 @@ apply() {
 
 usage() { sed -n '5,7s/^# \{0,1\}//p' "$0"; exit "${1:-0}"; }
 
+# Al salir: borra las descargas y, si algo falló, dice dónde está el log
+LOGGING=no
+on_exit() {
+  local code=$?
+  if [[ -n $TMP ]]; then rm -rf "$TMP"; fi
+  if (( code )) && [[ $LOGGING == yes ]]; then warn "custom-packages terminó con error (código $code). Log: ${LOG/#$HOME/\~}"; fi
+}
+trap on_exit EXIT
+
 # --- Comandos ---
 
 [[ $(uname) == Linux ]] || { echo "custom-packages es solo para Fedora." >&2; exit 1; }
 
+ARGS="$*"
 CMD=${1:-}
 [[ $# -gt 0 ]] && shift
 YES=no
@@ -118,6 +132,17 @@ for arg; do
     *) echo "Opción desconocida: $arg" >&2; usage 1 ;;
   esac
 done
+
+# update e install dejan un log igual que install.sh: la salida va también al archivo, sin colores, y la trampa ERR
+# anota el comando que falló y su línea. check no, para no pisar el log de la última instalación.
+if [[ $CMD == update || $CMD == install ]]; then
+  mkdir -p "$(dirname "$LOG")"
+  printf '== custom-packages %s · %s\n' "$ARGS" "$(date '+%Y-%m-%d %H:%M:%S')" >"$LOG"
+  exec > >(tee >(sed $'s/\e\\[[0-9;]*m//g' >>"$LOG")) 2>&1
+  LOGGING=yes
+  set -E
+  trap 'warn "falló en la línea $LINENO: $BASH_COMMAND"' ERR
+fi
 
 case "$CMD" in
   check)

@@ -79,6 +79,7 @@ Si en `~` ya existe un archivo real donde tiene que ir un symlink (por ejemplo, 
 
 Durante la instalación, Context7 abre el navegador para iniciar sesión. Es normal.
 
+Todo lo que muestra el script queda también, sin colores, en `~/.local/state/dotfiles/install.log`. El archivo guarda solo la última ejecución: se reescribe cada vez. Si algo falla, el log dice en qué línea y con qué comando, y al terminar el script te recuerda dónde está. Para que una IA lo revise, basta con pedirle que lea `~/.local/state/dotfiles/install.log` y te diga qué falló. Algunos instaladores muestran menos progreso que en una terminal normal, porque su salida pasa por el log.
 
 ### Pasos manuales
 
@@ -218,6 +219,8 @@ Para actualizar todo en Fedora:
 ```bash
 sudo dnf upgrade -y && flatpak update -y && custom-packages update -y
 ```
+
+`update` e `install` dejan un log de su última ejecución en `~/.local/state/dotfiles/custom-packages.log`, igual que `install.sh`. `check` no lo pisa.
 
 Cada programa se define en el script con cinco cosas: nombre, repo de GitHub, regex del archivo de la release, cómo leer la versión instalada y cómo instalar el archivo descargado. Para agregar uno, copia un bloque existente y agrega su clave a `PKGS`. La versión de AFFiNE se lee del metainfo de la app, porque flatpak no guarda la de un `.flatpak` suelto. balenaEtcher pide `sudo` al instalarse, porque usa `dnf`.
 

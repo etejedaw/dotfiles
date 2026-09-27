@@ -3,6 +3,8 @@
 #
 #   ./install.sh            instala
 #   ./install.sh --dry-run  muestra lo que haría, sin cambiar nada
+#
+# Todo lo que muestra queda también, sin colores, en ~/.local/state/dotfiles/install.log (solo la última ejecución).
 
 set -euo pipefail
 
@@ -10,6 +12,7 @@ DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGES="$DOTFILES/packages"
 BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
 NVM_VERSION="v0.40.8"
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install.log"
 DRY_RUN=no
 [[ "${1:-}" == "--dry-run" || "${1:-}" == "-n" ]] && DRY_RUN=yes
 
@@ -34,14 +37,33 @@ SUDO_KEEPALIVE_PID=
 sudo_once() {
   [[ $DRY_RUN == yes || -n $SUDO_KEEPALIVE_PID ]] && return
   sudo -v
-  # Se detiene sola si el script muere; el trap la detiene apenas termina
+  # Se detiene sola si el script muere; on_exit la detiene apenas termina
   while kill -0 "$$" 2>/dev/null; do sudo -n true; sleep 60; done >/dev/null 2>&1 &
   SUDO_KEEPALIVE_PID=$!
-  trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
 }
+
+# Al salir: detiene la renovación de sudo y, si algo falló, dice dónde está el log
+# shellcheck disable=SC2329  # la invoca el trap EXIT
+on_exit() {
+  local code=$?
+  if [[ -n $SUDO_KEEPALIVE_PID ]]; then kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true; fi
+  if (( code )); then warn "install.sh terminó con error (código $code). Log: ${LOG/#$HOME/\~}"; fi
+}
+trap on_exit EXIT
 
 # Lee una lista de packages/ sin comentarios ni líneas vacías
 list() { sed 's/#.*//' "$PACKAGES/$1" | xargs -n1; }
+
+# --- Log ---
+
+# La salida va a la terminal y al log (sin los códigos de color). La contraseña de sudo no pasa por aquí: sudo la
+# pide directo en la terminal. Con -E, la trampa ERR también ve los errores dentro de funciones, y anota el comando
+# que falló y su línea, para no tener que adivinarlo leyendo la salida.
+mkdir -p "$(dirname "$LOG")"
+printf '== install.sh %s · %s · %s\n' "$*" "$(date '+%Y-%m-%d %H:%M:%S')" "$(uname -srm)" >"$LOG"
+exec > >(tee >(sed $'s/\e\\[[0-9;]*m//g' >>"$LOG")) 2>&1
+set -E
+trap 'warn "falló en la línea $LINENO: $BASH_COMMAND"' ERR
 
 # --- Detección del sistema ---
 
