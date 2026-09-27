@@ -24,6 +24,15 @@
       }
    },
    "providers": {
+      "clipboard": {
+         "preferences": {
+            "eraseOnStartup": false,
+            "evictionThreshold": "86400",
+            "ignorePasswords": false,
+            "monitoring": true,
+            "preserveTagged": true
+         }
+      },
       "snippets": {
          "preferences": {
             "enabled": true,
