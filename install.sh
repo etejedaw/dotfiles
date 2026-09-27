@@ -355,6 +355,21 @@ else
   run npx -y ctx7@latest setup --claude --cli -y
 fi
 
+# settings.json no está en el repo (Claude Code lo reescribe), así que el hook se registra aquí
+step "Hook de herdr para Claude"
+claude_settings="$HOME/.claude/settings.json"
+# shellcheck disable=SC2016  # $HOME queda literal en settings.json; lo expande la shell que lanza el hook
+herdr_hook='$HOME/.claude/hooks/herdr-orchestrator.sh'
+if [[ -f $claude_settings ]] && jq -e --arg c "$herdr_hook" '.hooks.SessionStart[]?.hooks[]? | select(.command == $c)' "$claude_settings" >/dev/null; then
+  info "ya registrado"
+elif [[ $DRY_RUN == yes ]]; then
+  info "[dry-run] registrar $herdr_hook en $claude_settings"
+else
+  [[ -f $claude_settings ]] || echo '{}' >"$claude_settings"
+  merged="$(jq --arg c "$herdr_hook" '.hooks.SessionStart += [{hooks: [{type: "command", command: $c}]}]' "$claude_settings")"
+  printf '%s\n' "$merged" >"$claude_settings"
+fi
+
 # --- 7. Extensiones de VSCodium ---
 
 step "Extensiones de VSCodium"

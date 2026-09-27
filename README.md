@@ -11,7 +11,7 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `zsh` | zsh con Oh My Zsh, Powerlevel10k, nvm y alias |
 | `git` | `.gitconfig` (usa `gh` para las credenciales de GitHub) |
 | `ssh` | `~/.ssh/config` con los alias de mis servidores, **sin IPs ni llaves** |
-| `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) |
+| `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) y el hook que lo convierte en orquestador dentro de herdr |
 | `herdr` | `config.toml` de herdr, el multiplexor de agentes |
 | `vscodium` | `settings.json` de VSCodium y la lista de extensiones |
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) |
@@ -31,7 +31,7 @@ Además de los archivos de configuración, `install.sh` instala:
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS.
 - herdr, con su propio instalador en Mac y en Fedora: queda en `~/.local/bin` y se actualiza con `herdr update`, no con `brew` ni `dnf`.
-- Claude Code con las skills de Context7 (modo CLI) y herdr.
+- Claude Code con las skills de Context7 (modo CLI) y herdr, y el hook de herdr registrado en `~/.claude/settings.json`.
 - Las extensiones de VSCodium.
 
 ## Estructura
@@ -41,7 +41,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── zsh/            .zshrc, .p10k.zsh y .config/zsh/{aliases,linux,mac}.zsh
 ├── git/            .gitconfig
 ├── ssh/            .ssh/config
-├── claude/         .claude/rules/markdown.md
+├── claude/         .claude/rules/markdown.md y .claude/hooks/herdr-orchestrator.{sh,md}
 ├── herdr/          .config/herdr/config.toml
 ├── vscodium/       settings.json (una sola copia para Linux y Mac) + extensions
 ├── konsole/        perfil de Konsole
@@ -179,6 +179,12 @@ stow -t ~ --no-folding --ignore='\.var' vscodium     # Mac
 
 Ojo: VSCodium no detecta los cambios que no hace él mismo. Después de un `git pull` que cambie `settings.json`, recarga la ventana (`Developer: Reload Window`).
 
+### Claude Code dentro de herdr
+
+Cuando Claude Code arranca dentro de un panel de herdr, el hook `SessionStart` (`claude/.claude/hooks/herdr-orchestrator.sh`) le añade al contexto las instrucciones de `herdr-orchestrator.md`: Opus hace de orquestador y delega las tareas sencillas (búsquedas, resúmenes, consultar documentación, correr tests) en instancias de Claude en paneles vecinos, con haiku o con sonnet según la complejidad, y cierra esos paneles cuando ya no los necesita. Fuera de herdr el hook no imprime nada, así que no gasta tokens. Las instancias delegadas arrancan con `CLAUDE_HERDR_WORKER=1`, para que no deleguen a su vez.
+
+Es un hook y no una regla de `~/.claude/rules/` porque las reglas se cargan en todas las sesiones y no pueden depender de una variable de entorno. `~/.claude/settings.json` no está en el repo (Claude Code lo reescribe), así que `install.sh` registra el hook con `jq` si no está ya.
+
 ### Listas de paquetes
 
 Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`) y las líneas vacías.
@@ -304,6 +310,10 @@ curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | PRO
 curl -fsSL https://claude.ai/install.sh | bash
 npx -y skills@latest add herdrdev/herdr --skill herdr -g -a claude-code -y
 npx -y ctx7@latest setup --claude --cli -y     # abre el navegador para iniciar sesión
+
+# Registrar el hook de herdr en settings.json (una sola vez)
+jq '.hooks.SessionStart += [{hooks: [{type: "command", command: "$HOME/.claude/hooks/herdr-orchestrator.sh"}]}]' \
+  ~/.claude/settings.json > /tmp/settings.json && mv /tmp/settings.json ~/.claude/settings.json
 ```
 
 ### 7. Extensiones de VSCodium
