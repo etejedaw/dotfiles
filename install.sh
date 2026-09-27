@@ -229,7 +229,7 @@ backup_conflicts() {
     target="$HOME/$rel"
     [[ -e $target || -L $target ]] || continue
     [[ "$(readlink -f "$target")" == "$(readlink -f "$DOTFILES/$pkg/$rel")" ]] && continue
-    info "respaldo: ~/$rel → ${BACKUP_DIR/#$HOME/~}/$rel"
+    info "respaldo: ~/$rel → ${BACKUP_DIR/#$HOME/\~}/$rel"
     CONFLICTS=$((CONFLICTS + 1))
     run mkdir -p "$(dirname "$BACKUP_DIR/$rel")"
     run mv "$target" "$BACKUP_DIR/$rel"
@@ -421,8 +421,8 @@ EOF
 [[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"
 [[ $OS == Darwin ]] && echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
 [[ $DOCKER_GROUP_ADDED == yes ]] && echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
-[[ -d $BACKUP_DIR ]] && echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/~}"
+[[ -d $BACKUP_DIR ]] && echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/\~}"
 if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$REPO_STATUS_BEFORE" ]]; then
-  warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/~} diff'"
+  warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/\~} diff'"
 fi
 exit 0
