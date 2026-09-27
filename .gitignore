@@ -22,4 +22,3 @@ ssh/.ssh/*
 .zshrc.local
 .secrets
 .smbcredentials
-**/.aws/credentials

@@ -22,7 +22,6 @@ plugins=(
   nvm
   npm
   gh
-  aws
   jsontools
   fzf
   zsh-autosuggestions
