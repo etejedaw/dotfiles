@@ -8,7 +8,7 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 | Shell                      | zsh + Oh My Zsh + Powerlevel10k | zsh + Oh My Zsh + Powerlevel10k | zsh + Oh My Zsh + Powerlevel10k |
 | Lanzador                   | Raycast                         | Vicinae                         | por definir                     |
 | Ordenar ventanas           | Raycast                         | tiling de KWin                  | por definir                     |
-| Portapapeles con historial | Raycast                         | Klipper                         | por definir                     |
+| Portapapeles con historial | Raycast                         | Vicinae                         | por definir                     |
 | Calendario y tareas        | Calendario y Recordatorios      | KOrganizer                      | por definir                     |
 | Correo                     | Mail                            | Thunderbird (flatpak)           | Thunderbird (flatpak)           |
 | Editor                     | VSCodium (brew)                 | VSCodium (flatpak)              | VSCodium (flatpak)              |
