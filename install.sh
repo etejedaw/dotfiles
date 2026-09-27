@@ -266,11 +266,53 @@ else
   stow_pkg vscodium 'Library'
   # Deja el comando en ~/.local/bin, para `custom-packages update`
   stow_pkg custom-packages
-  if [[ $KDE == yes ]]; then
-    for pkg in konsole vicinae; do stow_pkg "$pkg"; done
-  fi
+  stow_pkg vicinae
+  if [[ $KDE == yes ]]; then stow_pkg konsole; fi
 fi
 run chmod 600 "$DOTFILES/ssh/.ssh/config"
+
+# En KDE, los atajos de Vicinae salen del .desktop del paquete vicinae y lo arranca ~/.config/autostart.
+# En GNOME hay que registrarlo todo con gsettings.
+if [[ $OS == Linux && $KDE == no ]]; then
+  # Agrega un valor a una lista de gsettings, si no está ya
+  gsettings_add() {
+    local schema=$1 key=$2 value=$3 list
+    list=$(gsettings get "$schema" "$key")
+    [[ $list == *"'$value'"* ]] && return
+    list=${list#@as }
+    if [[ $list == '[]' ]]; then list="['$value']"; else list="${list%]}, '$value']"; fi
+    run gsettings set "$schema" "$key" "$list"
+  }
+
+  # Atajo personalizado de GNOME. $1 = id, $2 = nombre, $3 = comando, $4 = atajo
+  gnome_shortcut() {
+    local path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$1/"
+    local schema="org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$path"
+    gsettings_add org.gnome.settings-daemon.plugins.media-keys custom-keybindings "$path"
+    run gsettings set "$schema" name "'$2'"
+    run gsettings set "$schema" command "'$3'"
+    run gsettings set "$schema" binding "'$4'"
+  }
+
+  step "Vicinae en GNOME"
+  # La instala custom-packages; GNOME la carga al volver a entrar a la sesión
+  gsettings_add org.gnome.shell enabled-extensions vicinae@dagimg-dot
+  # Arranca el servidor con la sesión gráfica. Sin --now: por SSH no hay sesión gráfica donde arrancarlo.
+  if systemctl --user is-enabled --quiet vicinae.service 2>/dev/null; then
+    info "servicio ya habilitado"
+  else
+    run systemctl --user enable vicinae.service
+  fi
+  # Los mismos atajos que en KDE. GNOME usa Super+Espacio para cambiar el idioma del teclado: se deja solo en la
+  # tecla de idioma del teclado.
+  if [[ $(gsettings get org.gnome.desktop.wm.keybindings switch-input-source) == *"'<Super>space'"* ]]; then
+    run gsettings set org.gnome.desktop.wm.keybindings switch-input-source "['XF86Keyboard']"
+    run gsettings set org.gnome.desktop.wm.keybindings switch-input-source-backward "['<Shift>XF86Keyboard']"
+  fi
+  gnome_shortcut vicinae Vicinae 'vicinae toggle' '<Super>space'
+  gnome_shortcut vicinae-clipboard 'Vicinae clipboard' \
+    'vicinae deeplink vicinae://launch/clipboard/history?toggle=true' '<Super><Shift>v'
+fi
 
 # La llave que ssh/.ssh/config usa para github.com. Sin passphrase, para que el script no se detenga a pedirla.
 # Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales del final.
@@ -464,6 +506,7 @@ cat <<EOF
 EOF
 [[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"
 [[ $OS == Darwin ]] && echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
+[[ $OS == Linux && $KDE == no ]] && echo "    - GNOME: cerrar sesión y volver a entrar, para que cargue la extensión de Vicinae y arranque su servidor"
 [[ $DOCKER_GROUP_ADDED == yes ]] && echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
 [[ -d $BACKUP_DIR ]] && echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/\~}"
 if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$REPO_STATUS_BEFORE" ]]; then
