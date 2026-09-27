@@ -398,14 +398,17 @@ elif [[ $OS == Linux ]] && ! flatpak info com.vscodium.codium >/dev/null 2>&1; t
   warn "VSCodium no está instalado: se omiten las extensiones"
 else
   installed=$("${codium_cmd[@]}" --list-extensions 2>/dev/null || true)
+  # Todas en una sola llamada: en Fedora cada llamada arranca el flatpak de nuevo (lento y con muchos avisos)
+  ext_args=()
   while IFS= read -r ext; do
     [[ -z $ext ]] && continue
     if grep -qix "$ext" <<<"$installed"; then
       info "ya instalada: $ext"
     else
-      run "${codium_cmd[@]}" --install-extension "$ext"
+      ext_args+=(--install-extension "$ext")
     fi
   done < "$DOTFILES/vscodium/extensions"
+  if (( ${#ext_args[@]} )); then run "${codium_cmd[@]}" "${ext_args[@]}"; fi
 fi
 
 # --- 8. Shell por defecto ---
