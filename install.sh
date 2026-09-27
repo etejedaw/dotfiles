@@ -324,11 +324,14 @@ else
 fi
 if [[ $DRY_RUN == yes ]]; then
   info "[dry-run] nvm install --lts"
+  info "[dry-run] nvm alias default 'lts/*'"
 else
   set +u
   # shellcheck source=/dev/null
   . "$NVM_DIR/nvm.sh"
   nvm install --lts
+  # Sin esto el default queda fijo en la primera versión instalada y no sigue a la LTS nueva
+  nvm alias default 'lts/*'
   set -u
 fi
 

@@ -29,7 +29,7 @@ Además de los archivos de configuración, `install.sh` instala:
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
-- nvm con Node LTS.
+- nvm con Node LTS, con `lts/*` como versión por defecto: cuando sale una LTS nueva e instalas esa versión, pasa a ser la de por defecto.
 - herdr, con su propio instalador en Mac y en Fedora: queda en `~/.local/bin` y se actualiza con `herdr update`, no con `brew` ni `dnf`.
 - Claude Code con las skills de Context7 (modo CLI) y herdr, y el hook de herdr registrado en `~/.claude/settings.json`.
 - Las extensiones de VSCodium.
@@ -304,6 +304,8 @@ done
 # PROFILE=/dev/null: que no escriba en .zshrc (nvm lo carga el plugin de Oh My Zsh)
 curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | PROFILE=/dev/null bash
 . ~/.nvm/nvm.sh && nvm install --lts
+# Que el default siga a la LTS más nueva, no a la primera versión instalada
+nvm alias default 'lts/*'
 ```
 
 ### 6. Claude Code y sus skills
