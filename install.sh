@@ -193,7 +193,8 @@ install_fedora_packages() {
     info "todo instalado"
   fi
 
-  # AFFiNE, git-flow-next y balenaEtcher no están en dnf ni en Flathub: custom-packages los baja de GitHub.
+  # AFFiNE, git-flow-next, balenaEtcher, Vicinae y su extensión para GNOME no están en dnf ni en Flathub:
+  # custom-packages los baja de GitHub.
   # Solo instala los que faltan; las actualizaciones son a mano, con `custom-packages update`.
   # Si falla (GitHub caído, por ejemplo), se avisa y el resto de la instalación sigue.
   step "Programas de GitHub (custom-packages)"

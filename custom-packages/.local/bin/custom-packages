@@ -14,7 +14,7 @@ set -euo pipefail
 
 BIN="$HOME/.local/bin"
 LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/custom-packages.log"
-PKGS=(affine gitflow etcher)
+PKGS=(affine gitflow etcher vicinae)  # en GNOME se agrega vicinaegnome, la extensión de Vicinae
 
 # --- Programas ---
 # Cada uno define: nombre, repo de GitHub, regex del archivo de la release, versión instalada
@@ -46,6 +46,31 @@ etcher_repo=balena-io/etcher
 etcher_asset='x86_64\.rpm$'
 etcher_version() { rpm -q balena-etcher >/dev/null 2>&1 && rpm -q --qf '%{VERSION}' balena-etcher || true; }
 etcher_install() { sudo dnf install -y "$1"; }
+
+vicinae_name=Vicinae
+vicinae_repo=vicinaehq/vicinae
+case "$(uname -m)" in
+  aarch64) vicinae_asset='aarch64\.AppImage$' ;;
+  *) vicinae_asset='x86_64\.AppImage$' ;;
+esac
+vicinae_version() { [[ -x /usr/local/bin/vicinae ]] && { /usr/local/bin/vicinae version 2>/dev/null | awk '/^Version/ {sub(/^v/, "", $2); print $2}' | grep . || echo '?'; } || true; }
+# Lo instala el script oficial a partir del AppImage descargado, en /usr/local (por eso sudo)
+vicinae_install() {
+  local script
+  script="$(dirname "$1")/vicinae-install.sh"
+  curl -fsSL https://vicinae.com/install -o "$script" && sudo bash "$script" --appimage "$1"
+}
+
+# Solo en GNOME. install.sh la activa; hace falta cerrar sesión y volver a entrar para que GNOME la cargue.
+vicinaegnome_name=vicinae-gnome
+vicinaegnome_repo=vicinaehq/gnome-extension
+vicinaegnome_asset='shell-extension.*\.zip$'
+vicinaegnome_version() {
+  local meta="$HOME/.local/share/gnome-shell/extensions/vicinae@dagimg-dot/metadata.json"
+  [[ -f $meta ]] && { jq -r '."version-name" // empty' "$meta" | grep . || echo '?'; } || true
+}
+vicinaegnome_install() { gnome-extensions install --force "$1"; }
+command -v gnome-shell >/dev/null && PKGS+=(vicinaegnome)
 
 # --- Utilidades ---
 
