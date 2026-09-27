@@ -15,7 +15,7 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `herdr` | `config.toml` de herdr, el multiplexor de agentes |
 | `vscodium` | `settings.json` de VSCodium y la lista de extensiones |
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) |
-| `vicinae` | Configuración del lanzador Vicinae y atajo a su historial del portapapeles |
+| `vicinae` | Configuración del lanzador Vicinae y, en KDE, atajo a su historial del portapapeles |
 | `hyper` | Terminal Hyper (JetBrainsMono Nerd Font) |
 
 Para ver en qué equipo va cada paquete, mira [Qué se sincroniza con Stow entre los equipos](#qué-se-sincroniza-con-stow-entre-los-equipos).
@@ -24,7 +24,8 @@ Además de los archivos de configuración, `install.sh` instala:
 
 - Los paquetes de `packages/` (ver [Listas de paquetes](#listas-de-paquetes)).
 - En Mac, las actualizaciones automáticas de Homebrew ([homebrew-autoupdate](https://github.com/DomT4/homebrew-autoupdate)): cada 12 horas y al iniciar sesión actualiza fórmulas y casks y limpia las versiones viejas.
-- En Fedora, el comando [`custom-packages`](#custom-packages), que instala y actualiza los programas que no están en dnf ni en Flathub desde su última release en GitHub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew) y [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`). `install.sh` instala los que falten con `custom-packages install -y`; las actualizaciones son a mano, con `custom-packages update`.
+- En GNOME, la configuración del lanzador [Vicinae](https://vicinae.com) (lo instala `custom-packages`): lo arranca con la sesión (servicio de systemd), activa su [extensión de GNOME](https://github.com/vicinaehq/gnome-extension) y crea los mismos atajos que en KDE: Super+Espacio abre Vicinae y Super+Shift+V su historial del portapapeles. Para eso le quita Super+Espacio al cambio de idioma del teclado.
+- En Fedora, el comando [`custom-packages`](#custom-packages), que instala y actualiza los programas que no están en dnf ni en Flathub desde su última release en GitHub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew), [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`), [Vicinae](https://github.com/vicinaehq/vicinae) (AppImage que instala su script oficial en `/usr/local`) y, solo en GNOME, la extensión de Vicinae. `install.sh` instala los que falten con `custom-packages install -y`; las actualizaciones son a mano, con `custom-packages update`.
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La llave SSH para GitHub (`~/.ssh/id_ed25519`, sin passphrase), si no existe. Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales.
 - La fuente JetBrainsMono Nerd Font. En GNOME, además, la pone como fuente de Ptyxis (la terminal) y hace que las pestañas nuevas se abran en la carpeta de la actual.
@@ -45,7 +46,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── herdr/          .config/herdr/config.toml
 ├── vscodium/       settings.json (una sola copia para Linux y Mac) + extensions
 ├── konsole/        perfil de Konsole
-├── vicinae/        settings.json de Vicinae y atajo Meta+Shift+V al historial del portapapeles (KDE)
+├── vicinae/        settings.json de Vicinae y atajo Meta+Shift+V al historial del portapapeles (el atajo, solo KDE)
 ├── hyper/          .hyper.js
 ├── custom-packages/ comando que instala y actualiza los programas de GitHub (Fedora)
 ├── packages/       listas de lo que se instala en cada sistema
@@ -91,6 +92,7 @@ Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `in
 - **IPs de los servidores:** crear `~/.ssh/config.d/hosts` (ver [SSH](#ssh)).
 - **Secretos:** tokens y contraseñas en `~/.secrets` (solo `export`, permisos 600).
 - **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`, y configuración de git en `~/.gitconfig.local` (ver [git](#git)).
+- **GNOME:** cerrar sesión y volver a entrar, para que GNOME cargue la extensión de Vicinae y arranque su servidor.
 - **Docker (Fedora):** cerrar sesión y volver a entrar, si el script te acaba de agregar al grupo `docker`.
 - **Docker (Mac):** abrir Docker Desktop una vez para aceptar la licencia y terminar la instalación.
 - **Mac:** `p10k configure` si los íconos no se ven bien.
@@ -126,8 +128,8 @@ Los paquetes de Stow que se enlazan en cada equipo. Un cambio en uno de ellos ll
 | | Fedora KDE | Fedora GNOME | Mac |
 |---|---|---|---|
 | `zsh git ssh claude herdr vscodium` | ✓ | ✓ | ✓ |
-| `custom-packages` | ✓ | ✓ | |
-| `konsole vicinae` | ✓ | | |
+| `custom-packages vicinae` | ✓ | ✓ | |
+| `konsole` | ✓ | | |
 | `hyper` | | | ✓ |
 
 ### zsh
@@ -206,7 +208,7 @@ Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`)
 
 ### custom-packages
 
-Algunos programas de Fedora no están en dnf ni en Flathub y se bajan de su release en GitHub: AFFiNE, git-flow-next y balenaEtcher. Como ni dnf ni flatpak los siguen, `custom-packages` compara la versión instalada con la última release y los instala o actualiza. `install.sh` lo enlaza en `~/.local/bin` e instala los que falten (`custom-packages install -y`; con `--dry-run`, solo `custom-packages ls`). Nunca los actualiza: eso queda para `custom-packages update`. Si falla, por ejemplo porque GitHub no responde, `install.sh` avisa y sigue con el resto.
+Algunos programas de Fedora no están en dnf ni en Flathub y se bajan de su release en GitHub: AFFiNE, git-flow-next, balenaEtcher, Vicinae y, solo en GNOME (si existe `gnome-shell`), la extensión de Vicinae. Como ni dnf ni flatpak los siguen, `custom-packages` compara la versión instalada con la última release y los instala o actualiza. `install.sh` lo enlaza en `~/.local/bin` e instala los que falten (`custom-packages install -y`; con `--dry-run`, solo `custom-packages ls`). Nunca los actualiza: eso queda para `custom-packages update`. Si falla, por ejemplo porque GitHub no responde, `install.sh` avisa y sigue con el resto.
 
 ```bash
 custom-packages ls            # lista cada programa con su versión instalada y la última, sin cambiar nada
@@ -224,7 +226,7 @@ sudo dnf upgrade -y && flatpak update -y && custom-packages update -y
 
 `update` e `install` dejan un log de su última ejecución en `~/.local/state/dotfiles/custom-packages.log`, igual que `install.sh`. `ls` no lo pisa.
 
-Cada programa se define en el script con cinco cosas: nombre, repo de GitHub, regex del archivo de la release, cómo leer la versión instalada y cómo instalar el archivo descargado. Para agregar uno, copia un bloque existente y agrega su clave a `PKGS`. La versión de AFFiNE se lee del metainfo de la app, porque flatpak no guarda la de un `.flatpak` suelto. balenaEtcher pide `sudo` al instalarse, porque usa `dnf`.
+Cada programa se define en el script con cinco cosas: nombre, repo de GitHub, regex del archivo de la release, cómo leer la versión instalada y cómo instalar el archivo descargado. Para agregar uno, copia un bloque existente y agrega su clave a `PKGS`. La versión de AFFiNE se lee del metainfo de la app, porque flatpak no guarda la de un `.flatpak` suelto. balenaEtcher pide `sudo` al instalarse, porque usa `dnf`, y Vicinae también, porque su script oficial (que `custom-packages` baja en cada instalación y ejecuta con `--appimage`) instala en `/usr/local`. La extensión de Vicinae se instala con `gnome-extensions install --force` y su versión se lee de su `metadata.json`; GNOME la carga al volver a entrar a la sesión.
 
 ## Instalación manual (sin `install.sh`)
 
@@ -246,8 +248,21 @@ sudo usermod -aG docker $USER
 # Apps gráficas
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak install --user -y flathub $(sed 's/#.*//' packages/flatpak)
-# AFFiNE, git-flow-next y balenaEtcher: no están en dnf ni en Flathub, se bajan de GitHub
+# AFFiNE, git-flow-next, balenaEtcher, Vicinae y (en GNOME) la extensión de Vicinae: no están en dnf ni en Flathub, se bajan de GitHub
 ./custom-packages/.local/bin/custom-packages install
+```
+
+**Solo GNOME** (Vicinae: extensión, servicio y atajos; después, cerrar sesión y volver a entrar):
+
+```bash
+gnome-extensions enable vicinae@dagimg-dot   # o desde la app Extensiones, después de volver a entrar
+systemctl --user enable vicinae.service
+# Super+Espacio queda libre para Vicinae; el idioma del teclado, solo en su tecla
+gsettings set org.gnome.desktop.wm.keybindings switch-input-source "['XF86Keyboard']"
+gsettings set org.gnome.desktop.wm.keybindings switch-input-source-backward "['<Shift>XF86Keyboard']"
+# Atajos: en Configuración > Teclado > Atajos personalizados
+#   Vicinae            vicinae toggle                                                    Super+Espacio
+#   Vicinae clipboard  vicinae deeplink vicinae://launch/clipboard/history?toggle=true   Super+Shift+V
 ```
 
 **Mac:**
@@ -286,9 +301,9 @@ chmod 600 ~/.dotfiles/ssh/.ssh/config
 
 # Linux
 stow -t ~ --no-folding --ignore='Library' vscodium
-stow -t ~ --no-folding custom-packages
+stow -t ~ --no-folding custom-packages vicinae
 # Solo KDE
-stow -t ~ --no-folding konsole vicinae
+stow -t ~ --no-folding konsole
 # Solo GNOME: fuente de Ptyxis y pestañas nuevas en la misma carpeta (vive en dconf, no en un archivo)
 gsettings set org.gnome.Ptyxis use-system-font false
 gsettings set org.gnome.Ptyxis font-name 'JetBrainsMono Nerd Font Mono 11'
@@ -438,7 +453,7 @@ En la sección `2. Symlinks con Stow`, agrégalo a la línea que corresponda:
 
 ```bash
 for pkg in zsh git ssh claude btop; do stow_pkg "$pkg"; done          # todos los equipos
-for pkg in konsole vicinae; do stow_pkg "$pkg"; done                  # solo KDE
+if [[ $KDE == yes ]]; then stow_pkg konsole; fi                       # solo KDE
 ```
 
 ### Agregar un paso

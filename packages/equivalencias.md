@@ -6,9 +6,9 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 | -------------------------- | ------------------------------- | ------------------------------- | ------------------------------- |
 | Terminal                   | Hyper                           | Konsole                         | Ptyxis                          |
 | Shell                      | zsh + Oh My Zsh + Powerlevel10k | zsh + Oh My Zsh + Powerlevel10k | zsh + Oh My Zsh + Powerlevel10k |
-| Lanzador                   | Raycast                         | Vicinae                         | por definir                     |
+| Lanzador                   | Raycast                         | Vicinae                         | Vicinae                         |
 | Ordenar ventanas           | Raycast                         | tiling de KWin                  | por definir                     |
-| Portapapeles con historial | Raycast                         | Vicinae                         | por definir                     |
+| Portapapeles con historial | Raycast                         | Vicinae                         | Vicinae                         |
 | Calendario y tareas        | Calendario y Recordatorios      | KOrganizer                      | por definir                     |
 | Correo                     | Mail                            | Thunderbird (flatpak)           | Thunderbird (flatpak)           |
 | Editor                     | VSCodium (brew)                 | VSCodium (flatpak)              | VSCodium (flatpak)              |
