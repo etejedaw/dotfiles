@@ -271,6 +271,16 @@ else
 fi
 run chmod 600 "$DOTFILES/ssh/.ssh/config"
 
+# La llave que ssh/.ssh/config usa para github.com. Sin passphrase, para que el script no se detenga a pedirla.
+# Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales del final.
+step "Llave SSH para GitHub"
+if [[ -f $HOME/.ssh/id_ed25519 ]]; then
+  info "ya existe"
+else
+  run ssh-keygen -q -t ed25519 -N '' -C "$USER@${HOSTNAME%%.*}" -f "$HOME/.ssh/id_ed25519"
+  info "creada: ~/.ssh/id_ed25519"
+fi
+
 # --- 3. Fuente ---
 
 step "Fuente JetBrainsMono Nerd Font"
@@ -413,8 +423,8 @@ fi
 
 step "Listo. Pasos manuales pendientes:"
 cat <<EOF
-    - gh auth login   (HTTPS y navegador)
-    - Llaves SSH: copiarlas a ~/.ssh/ o generarlas, y crear ~/.ssh/config.d/hosts con los HostName
+    - gh auth login -p ssh   (navegador; ofrece subir ~/.ssh/id_ed25519.pub a GitHub: acepta)
+    - Llaves SSH de los servidores: copiarlas a ~/.ssh/, y crear ~/.ssh/config.d/hosts con los HostName
     - Crear ~/.secrets (600) con los tokens y ~/.zshrc.local con lo de este equipo
     - Abrir una terminal nueva para cargar zsh
 EOF

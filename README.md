@@ -26,6 +26,7 @@ Además de los archivos de configuración, `install.sh` instala:
 - En Mac, las actualizaciones automáticas de Homebrew ([homebrew-autoupdate](https://github.com/DomT4/homebrew-autoupdate)): cada 12 horas y al iniciar sesión actualiza fórmulas y casks y limpia las versiones viejas.
 - En Fedora, el comando [`custom-packages`](#custom-packages), que instala y actualiza los programas que no están en dnf ni en Flathub desde su última release en GitHub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew) y [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`). `install.sh` instala los que falten con `custom-packages install -y`; las actualizaciones son a mano, con `custom-packages update`.
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
+- La llave SSH para GitHub (`~/.ssh/id_ed25519`, sin passphrase), si no existe. Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales.
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS, con `lts/*` como versión por defecto: cuando sale una LTS nueva e instalas esa versión, pasa a ser la de por defecto.
@@ -85,8 +86,8 @@ Todo lo que muestra el script queda también, sin colores, en `~/.local/state/do
 
 Hay cosas que no pueden (o no deben) estar en un repo público. Al terminar, `install.sh` las lista:
 
-- **GitHub:** `gh auth login` (HTTPS y navegador).
-- **Llaves SSH:** copiarlas a `~/.ssh/` desde el gestor de contraseñas, o generar nuevas y registrar la pública donde corresponda.
+- **GitHub:** `gh auth login -p ssh` (con el navegador). Con `-p ssh`, gh configura git para usar SSH con GitHub y ofrece subir la llave `~/.ssh/id_ed25519.pub` que creó `install.sh`: acepta. Si la llave ya estaba en GitHub (porque la copiaste de otro equipo), no hace falta subirla de nuevo.
+- **Llaves SSH de los servidores:** copiarlas a `~/.ssh/` desde el gestor de contraseñas, o generar nuevas y registrar la pública donde corresponda.
 - **IPs de los servidores:** crear `~/.ssh/config.d/hosts` (ver [SSH](#ssh)).
 - **Secretos:** tokens y contraseñas en `~/.secrets` (solo `export`, permisos 600).
 - **Cosas de un solo equipo:** alias y funciones en `~/.zshrc.local`, y configuración de git en `~/.gitconfig.local` (ver [git](#git)).
@@ -280,6 +281,8 @@ cd ~/.dotfiles
 mkdir -p ~/.ssh/config.d && chmod 700 ~/.ssh ~/.ssh/config.d
 stow -t ~ --no-folding zsh git ssh claude herdr
 chmod 600 ~/.dotfiles/ssh/.ssh/config
+# Llave SSH para GitHub, sin passphrase (solo si no existe). Después: gh auth login -p ssh
+[ -f ~/.ssh/id_ed25519 ] || ssh-keygen -q -t ed25519 -N '' -C "$USER@$(hostname -s)" -f ~/.ssh/id_ed25519
 
 # Linux
 stow -t ~ --no-folding --ignore='Library' vscodium
