@@ -209,9 +209,10 @@ Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`)
 Algunos programas de Fedora no están en dnf ni en Flathub y se bajan de su release en GitHub: AFFiNE, git-flow-next y balenaEtcher. Como ni dnf ni flatpak los siguen, `custom-packages` compara la versión instalada con la última release y los instala o actualiza. `install.sh` lo enlaza en `~/.local/bin`, pero no lo ejecuta.
 
 ```bash
-custom-packages check         # versión instalada y última de cada uno, sin cambiar nada
-custom-packages install       # instala los que faltan (en un equipo nuevo)
-custom-packages update -y     # actualiza los que tienen versión nueva; sin -y, pregunta antes
+custom-packages ls            # lista cada programa con su versión instalada y la última, sin cambiar nada
+custom-packages update        # muestra los que tienen versión nueva y pregunta antes de actualizarlos
+custom-packages update -y     # actualiza todos los que tienen versión nueva, sin preguntar
+custom-packages install       # instala los que faltan (en un equipo nuevo); con -y, sin preguntar
 ```
 
 Para actualizar todo en Fedora:
@@ -220,7 +221,7 @@ Para actualizar todo en Fedora:
 sudo dnf upgrade -y && flatpak update -y && custom-packages update -y
 ```
 
-`update` e `install` dejan un log de su última ejecución en `~/.local/state/dotfiles/custom-packages.log`, igual que `install.sh`. `check` no lo pisa.
+`update` e `install` dejan un log de su última ejecución en `~/.local/state/dotfiles/custom-packages.log`, igual que `install.sh`. `ls` no lo pisa.
 
 Cada programa se define en el script con cinco cosas: nombre, repo de GitHub, regex del archivo de la release, cómo leer la versión instalada y cómo instalar el archivo descargado. Para agregar uno, copia un bloque existente y agrega su clave a `PKGS`. La versión de AFFiNE se lee del metainfo de la app, porque flatpak no guarda la de un `.flatpak` suelto. balenaEtcher pide `sudo` al instalarse, porque usa `dnf`.
 

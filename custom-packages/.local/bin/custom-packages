@@ -2,7 +2,7 @@
 # Instala y actualiza los programas de Fedora que se bajan de GitHub porque no están en dnf ni en Flathub.
 # dnf upgrade y flatpak update no los ven: este script compara la versión instalada con la última release.
 #
-#   custom-packages check         muestra la versión instalada y la última de cada uno, sin cambiar nada
+#   custom-packages ls            lista la versión instalada y la última de cada uno, sin cambiar nada
 #   custom-packages update [-y]   actualiza los instalados que tienen versión nueva (-y: sin preguntar)
 #   custom-packages install [-y]  instala los que faltan
 #
@@ -134,7 +134,7 @@ for arg; do
 done
 
 # update e install dejan un log igual que install.sh: la salida va también al archivo, sin colores, y la trampa ERR
-# anota el comando que falló y su línea. check no, para no pisar el log de la última instalación.
+# anota el comando que falló y su línea. ls no, para no pisar el log de la última instalación.
 if [[ $CMD == update || $CMD == install ]]; then
   mkdir -p "$(dirname "$LOG")"
   printf '== custom-packages %s · %s\n' "$ARGS" "$(date '+%Y-%m-%d %H:%M:%S')" >"$LOG"
@@ -145,7 +145,7 @@ if [[ $CMD == update || $CMD == install ]]; then
 fi
 
 case "$CMD" in
-  check)
+  ls)
     fetch
     printf '\n    %-15s %-12s %s\n' PROGRAMA INSTALADA ÚLTIMA
     for p in "${PKGS[@]}"; do
