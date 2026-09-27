@@ -4,7 +4,7 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 
 | Función                    | Mac                             | Fedora KDE                      | Fedora GNOME                    |
 | -------------------------- | ------------------------------- | ------------------------------- | ------------------------------- |
-| Terminal                   | Hyper                           | Konsole                         | Terminal de GNOME               |
+| Terminal                   | Hyper                           | Konsole                         | Ptyxis                          |
 | Shell                      | zsh + Oh My Zsh + Powerlevel10k | zsh + Oh My Zsh + Powerlevel10k | zsh + Oh My Zsh + Powerlevel10k |
 | Lanzador                   | Raycast                         | Vicinae                         | por definir                     |
 | Ordenar ventanas           | Raycast                         | tiling de KWin                  | por definir                     |
