@@ -15,7 +15,7 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 | Markdown                   | MarkText (brew)                 | MarkText (flatpak)              | MarkText (flatpak)              |
 | Navegador                  | Brave (brew)                    | Brave (flatpak)                 | Brave (flatpak)                 |
 | Cliente API                | Bruno (brew)                    | Bruno (flatpak)                 | Bruno (flatpak)                 |
-| Base de datos              | DBeaver (brew)                  | DBeaver (flatpak)               | DBeaver (flatpak)               |
+| Base de datos              | DbGate (brew)                   | DbGate (flatpak)                | DbGate (flatpak)                |
 | Contenedores               | Docker Desktop (brew)           | Docker Engine (dnf)             | Docker Engine (dnf)             |
 | Cliente FTP/SFTP           | ninguno (`sftp` en la terminal) | FileZilla (flatpak)             | FileZilla (flatpak)             |
 | Apps gráficas              | `brew install --cask`           | `flatpak install flathub`       | `flatpak install flathub`       |
