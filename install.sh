@@ -200,6 +200,20 @@ install_fedora_packages() {
       mkdir -p "$HOME/.local/bin"
       curl -fsSL "$url" | tar -xz -C "$HOME/.local/bin" git-flow'
   fi
+
+  # No está en dnf ni en Flathub: se instala el .rpm de la última versión en GitHub (no se actualiza con dnf upgrade)
+  step "balenaEtcher (.rpm de GitHub)"
+  if rpm -q balena-etcher >/dev/null 2>&1; then
+    info "ya instalado"
+  else
+    sudo_once
+    run bash -c 'set -e
+      url=$(curl -fsSL https://api.github.com/repos/balena-io/etcher/releases/latest | grep -o "https://[^\"]*x86_64\.rpm" | head -1)
+      file=$(mktemp --suffix=.rpm)
+      curl -fsSL "$url" -o "$file"
+      sudo dnf install -y "$file"
+      rm -f "$file"'
+  fi
 }
 
 if [[ $OS == Darwin ]]; then install_mac_packages; else install_fedora_packages; fi

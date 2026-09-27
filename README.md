@@ -26,6 +26,7 @@ Además de los archivos de configuración, `install.sh` instala:
 - En Mac, las actualizaciones automáticas de Homebrew ([homebrew-autoupdate](https://github.com/DomT4/homebrew-autoupdate)): cada 12 horas y al iniciar sesión actualiza fórmulas y casks y limpia las versiones viejas.
 - En Fedora, AFFiNE, que no está en Flathub (en Mac viene de brew): descarga el `.flatpak` de su última versión en GitHub. Este no se actualiza con `flatpak update`; para actualizarlo, desinstálalo y vuelve a ejecutar `install.sh`.
 - En Fedora, [git-flow-next](https://github.com/gittower/git-flow-next), que no está en dnf: descarga el binario de su última versión en GitHub a `~/.local/bin`. No se actualiza solo; para actualizarlo, bórralo y vuelve a ejecutar `install.sh`. En Mac viene de brew.
+- En Fedora, [balenaEtcher](https://github.com/balena-io/etcher), que no está en dnf ni en Flathub: descarga el `.rpm` de su última versión en GitHub y lo instala con dnf. No se actualiza con `dnf upgrade`; para actualizarlo, desinstálalo (`sudo dnf remove balena-etcher`) y vuelve a ejecutar `install.sh`.
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La fuente JetBrainsMono Nerd Font.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
@@ -226,6 +227,9 @@ flatpak install --user -y /tmp/affine.flatpak
 # git-flow-next: no está en dnf, se descarga el binario de GitHub (cambia amd64 por arm64 en ARM)
 mkdir -p ~/.local/bin
 curl -fsSL "$(curl -fsSL https://api.github.com/repos/gittower/git-flow-next/releases/latest | grep -o 'https://[^"]*linux-amd64\.tar\.gz' | head -1)" | tar -xz -C ~/.local/bin git-flow
+# balenaEtcher: no está en dnf ni en Flathub, se instala el .rpm de GitHub
+curl -fsSL -o /tmp/balena-etcher.rpm "$(curl -fsSL https://api.github.com/repos/balena-io/etcher/releases/latest | grep -o 'https://[^"]*x86_64\.rpm' | head -1)"
+sudo dnf install -y /tmp/balena-etcher.rpm
 ```
 
 **Mac:**
