@@ -301,6 +301,36 @@ else
   fi
 fi
 
+# Ptyxis guarda su configuración en dconf, no en archivos: se aplica con gsettings. Usa la misma fuente que Konsole
+# y abre las pestañas y ventanas nuevas en la carpeta de la actual.
+if [[ $OS == Linux && $KDE == no ]]; then
+  step "Ptyxis (terminal de GNOME)"
+  if ! gsettings list-keys org.gnome.Ptyxis >/dev/null 2>&1; then
+    warn "Ptyxis no está instalado: se omite su configuración"
+  elif [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
+    warn "sin sesión gráfica (¿SSH?): la configuración de Ptyxis se aplicará al ejecutar install.sh desde el escritorio"
+  else
+    # $1 = schema (con ruta, si es un perfil), $2 = clave, $3 = valor en formato GVariant
+    ptyxis_set() {
+      if [[ "$(gsettings get "$1" "$2")" == "$3" ]]; then
+        info "ya configurado: $2"
+      else
+        run gsettings set "$1" "$2" "$3"
+      fi
+    }
+    ptyxis_set org.gnome.Ptyxis use-system-font false
+    ptyxis_set org.gnome.Ptyxis font-name "'JetBrainsMono Nerd Font Mono 11'"
+    # Si Ptyxis nunca se abrió no hay perfil todavía: se crea uno y queda como predeterminado
+    profile=$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")
+    if [[ -z $profile ]]; then
+      profile=$(tr -d - </proc/sys/kernel/random/uuid)
+      run gsettings set org.gnome.Ptyxis profile-uuids "['$profile']"
+      run gsettings set org.gnome.Ptyxis default-profile-uuid "'$profile'"
+    fi
+    ptyxis_set "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$profile/" preserve-directory "'always'"
+  fi
+fi
+
 # --- 4. Oh My Zsh, Powerlevel10k y plugins ---
 
 step "Oh My Zsh"

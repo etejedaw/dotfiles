@@ -27,7 +27,7 @@ Además de los archivos de configuración, `install.sh` instala:
 - En Fedora, el comando [`custom-packages`](#custom-packages), que instala y actualiza los programas que no están en dnf ni en Flathub desde su última release en GitHub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew) y [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`). `install.sh` instala los que falten con `custom-packages install -y`; las actualizaciones son a mano, con `custom-packages update`.
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La llave SSH para GitHub (`~/.ssh/id_ed25519`, sin passphrase), si no existe. Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales.
-- La fuente JetBrainsMono Nerd Font.
+- La fuente JetBrainsMono Nerd Font. En GNOME, además, la pone como fuente de Ptyxis (la terminal) y hace que las pestañas nuevas se abran en la carpeta de la actual.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS, con `lts/*` como versión por defecto: cuando sale una LTS nueva e instalas esa versión, pasa a ser la de por defecto.
 - herdr, con su propio instalador en Mac y en Fedora: queda en `~/.local/bin` y se actualiza con `herdr update`, no con `brew` ni `dnf`.
@@ -289,6 +289,11 @@ stow -t ~ --no-folding --ignore='Library' vscodium
 stow -t ~ --no-folding custom-packages
 # Solo KDE
 stow -t ~ --no-folding konsole vicinae
+# Solo GNOME: fuente de Ptyxis y pestañas nuevas en la misma carpeta (vive en dconf, no en un archivo)
+gsettings set org.gnome.Ptyxis use-system-font false
+gsettings set org.gnome.Ptyxis font-name 'JetBrainsMono Nerd Font Mono 11'
+profile=$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")
+gsettings set "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$profile/" preserve-directory 'always'
 
 # Mac
 stow -t ~ --no-folding --ignore='\.var' vscodium
