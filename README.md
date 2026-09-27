@@ -140,6 +140,8 @@ Al final se cargan, si existen, dos archivos que no están en el repo:
 
 El plugin `git-auto-fetch` hace `git fetch --all` en segundo plano cada vez que aparece el prompt dentro de un repo, como mucho cada 120 segundos (`GIT_AUTO_FETCH_INTERVAL`). Así el prompt de Powerlevel10k muestra si hay commits nuevos en el remoto sin hacer fetch a mano. Para apagarlo en un repo (por ejemplo, con datos móviles), ejecuta `git-auto-fetch` dentro de él; el mismo comando lo vuelve a encender.
 
+El plugin `herdr` genera el autocompletado de `herdr` en segundo plano cada vez que se abre una shell, así sigue al día después de `herdr update`. También trae alias (`hrdr`, `hrdrsl`, `hrdral`…) y `hrdrs`, que elige una sesión con fzf. En un equipo sin herdr no hace nada.
+
 ### git
 
 `git/.gitconfig` es común a todos los equipos y, al final, incluye `~/.gitconfig.local` si existe. Ahí va lo que es de un solo equipo, y como se carga al último, pisa lo del repo.

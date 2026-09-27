@@ -24,6 +24,7 @@ plugins=(
   gh
   jsontools
   fzf
+  herdr
   zsh-autosuggestions
   zsh-syntax-highlighting  # siempre al final
 )
