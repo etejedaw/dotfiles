@@ -24,6 +24,7 @@ jobs:
   fedora:
     runs-on: ubuntu-latest
     container: fedora:latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -49,6 +50,7 @@ jobs:
 
   mac:
     runs-on: macos-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
