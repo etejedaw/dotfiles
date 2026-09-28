@@ -486,6 +486,8 @@ custom-packages ls                # si cambiaste custom-packages: que lea bien l
 
 GitHub también ejecuta `shellcheck` en cada push o pull request que cambie `install.sh` o `custom-packages` (`.github/workflows/lint.yml`). Si falla, GitHub te avisa por correo; ejecutarlo en local sirve para verlo antes del push.
 
+Otro workflow (`.github/workflows/packages.yml`) revisa que todo lo de `packages/` se pueda seguir instalando: que exista en dnf (con los repos de `dnf-repos`), en Flathub y en Homebrew, y que Homebrew no lo haya desactivado. Si Homebrew marca uno como obsoleto, avisa sin fallar: es la señal de que pronto lo desactivará. Corre cuando cambian las listas, cada lunes (un paquete se puede romper sin que cambie nada en el repo) y a mano desde la pestaña Actions. No revisa `custom-packages`.
+
 ## Lo que queda fuera, a propósito
 
 - **Llaves SSH, IPs y servidores de clientes:** en el gestor de contraseñas y en `~/.ssh/config.d/`.

@@ -1,0 +1,66 @@
+# Revisa que todo lo de packages/ se pueda seguir instalando: que exista en dnf, Flathub y Homebrew, y que Homebrew no
+# lo haya desactivado (como pasó con el cask de MarkText). Corre cuando cambian las listas y cada lunes, porque un
+# paquete se puede romper sin que cambie nada en el repo.
+name: Packages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - packages/**
+      - .github/workflows/packages.yml
+  pull_request:
+    paths:
+      - packages/**
+      - .github/workflows/packages.yml
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fedora:
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: dnf (common + dnf)
+        run: |
+          dnf install -y -q dnf5-plugins
+          for url in $(sed 's/#.*//' packages/dnf-repos); do dnf config-manager addrepo --from-repofile="$url"; done
+          fail=0
+          for p in $(sed 's/#.*//' packages/common packages/dnf); do
+            dnf -q repoquery --available "$p" 2>/dev/null | grep -q . || { echo "::error::no está en dnf: $p"; fail=1; }
+          done
+          exit $fail
+      - name: Flathub
+        run: |
+          dnf install -y -q flatpak
+          flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          fail=0
+          for app in $(sed 's/#.*//' packages/flatpak); do
+            flatpak remote-info flathub "$app" >/dev/null 2>&1 || { echo "::error::no está en Flathub: $app"; fail=1; }
+          done
+          exit $fail
+
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Homebrew (common + brew)
+        run: |
+          fail=0
+          for p in $(sed 's/#.*//' packages/common packages/brew); do
+            # Paquetes de taps externos: igual que install.sh, primero el tap y la confianza
+            if [[ $p == */*/* ]]; then brew tap -q "${p%/*}" && brew trust "$p"; fi
+            if ! json=$(brew info --json=v2 "$p" 2>/dev/null); then
+              echo "::error::no está en Homebrew: $p"; fail=1; continue
+            fi
+            case $(jq -r '[.formulae[], .casks[]][0] | if .disabled then "disabled" elif .deprecated then "deprecated" else "" end' <<<"$json") in
+              disabled) echo "::error::Homebrew lo desactivó: $p"; fail=1 ;;
+              deprecated) echo "::warning::Homebrew lo marcó como obsoleto (pronto lo desactivará): $p" ;;
+            esac
+          done
+          exit $fail
