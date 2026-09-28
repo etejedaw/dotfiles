@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 # Instala y actualiza los programas que se bajan de GitHub porque no están en dnf ni en Flathub (Fedora) o porque
 # Homebrew no los deja instalar (Mac). Los gestores de paquetes no los ven: este script compara la versión instalada
-# con la última release.
-#
-#   custom-packages ls            lista la versión instalada y la última de cada uno, sin cambiar nada
-#   custom-packages update [-y]   actualiza los instalados que tienen versión nueva (-y: sin preguntar)
-#   custom-packages install [-y]  instala los que faltan
+# con la última release. Los comandos están en usage() (custom-packages --help).
 #
 # update e install dejan lo que muestran, sin colores, en ~/.local/state/dotfiles/custom-packages.log (solo la última
 # ejecución).
@@ -158,7 +154,14 @@ apply() {
   return $failed
 }
 
-usage() { sed -n '5,7s/^# \{0,1\}//p' "$0"; exit "${1:-0}"; }
+usage() {
+  cat <<'EOF'
+  custom-packages ls            lista la versión instalada y la última de cada uno, sin cambiar nada
+  custom-packages update [-y]   actualiza los instalados que tienen versión nueva (-y: sin preguntar)
+  custom-packages install [-y]  instala los que faltan
+EOF
+  exit "${1:-0}"
+}
 
 # Al salir: borra las descargas y, si algo falló, dice dónde está el log
 LOGGING=no
