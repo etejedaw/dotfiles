@@ -43,13 +43,19 @@ case "$(uname -m)" in
   aarch64) gitflow_asset='linux-arm64\.tar\.gz$' ;;
   *) gitflow_asset='linux-amd64\.tar\.gz$' ;;
 esac
-gitflow_version() { [[ -x $BIN/git-flow ]] && { "$BIN/git-flow" version 2>/dev/null | awk '{print $1}' | grep . || echo '?'; } || true; }
+gitflow_version() {
+  [[ -x $BIN/git-flow ]] || return 0
+  "$BIN/git-flow" version 2>/dev/null | awk '{print $1}' | grep . || echo '?'
+}
 gitflow_install() { mkdir -p "$BIN" && tar -xzf "$1" -C "$BIN" git-flow; }
 
 etcher_name=balenaEtcher
 etcher_repo=balena-io/etcher
 etcher_asset='x86_64\.rpm$'
-etcher_version() { rpm -q balena-etcher >/dev/null 2>&1 && rpm -q --qf '%{VERSION}' balena-etcher || true; }
+etcher_version() {
+  rpm -q balena-etcher >/dev/null 2>&1 || return 0
+  rpm -q --qf '%{VERSION}' balena-etcher
+}
 etcher_install() { sudo dnf install -y "$1"; }
 
 vicinae_name=Vicinae
@@ -58,7 +64,10 @@ case "$(uname -m)" in
   aarch64) vicinae_asset='aarch64\.AppImage$' ;;
   *) vicinae_asset='x86_64\.AppImage$' ;;
 esac
-vicinae_version() { [[ -x /usr/local/bin/vicinae ]] && { /usr/local/bin/vicinae version 2>/dev/null | awk '/^Version/ {sub(/^v/, "", $2); print $2}' | grep . || echo '?'; } || true; }
+vicinae_version() {
+  [[ -x /usr/local/bin/vicinae ]] || return 0
+  /usr/local/bin/vicinae version 2>/dev/null | awk '/^Version/ {sub(/^v/, "", $2); print $2}' | grep . || echo '?'
+}
 # Lo instala el script oficial a partir del AppImage descargado, en /usr/local (por eso sudo)
 vicinae_install() {
   local script
@@ -72,7 +81,8 @@ vicinaegnome_repo=vicinaehq/gnome-extension
 vicinaegnome_asset='shell-extension.*\.zip$'
 vicinaegnome_version() {
   local meta="$HOME/.local/share/gnome-shell/extensions/vicinae@dagimg-dot/metadata.json"
-  [[ -f $meta ]] && { jq -r '."version-name" // empty' "$meta" | grep . || echo '?'; } || true
+  [[ -f $meta ]] || return 0
+  jq -r '."version-name" // empty' "$meta" | grep . || echo '?'
 }
 vicinaegnome_install() { gnome-extensions install --force "$1"; }
 command -v gnome-shell >/dev/null && PKGS+=(vicinaegnome)
@@ -86,7 +96,10 @@ case "$(uname -m)" in
   *) marktext_asset='mac-x64-.*\.zip$' ;;
 esac
 readonly MARKTEXT_APP=/Applications/marktext.app
-marktext_version() { [[ -d $MARKTEXT_APP ]] && { plutil -extract CFBundleShortVersionString raw "$MARKTEXT_APP/Contents/Info.plist" 2>/dev/null || echo '?'; } || true; }
+marktext_version() {
+  [[ -d $MARKTEXT_APP ]] || return 0
+  plutil -extract CFBundleShortVersionString raw "$MARKTEXT_APP/Contents/Info.plist" 2>/dev/null || echo '?'
+}
 # Se descomprime aparte y reemplaza la app entera, para no mezclar archivos de dos versiones
 marktext_install() {
   local dir
