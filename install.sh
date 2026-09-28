@@ -125,7 +125,7 @@ install_mac_packages() {
   local installed missing=()
   installed=$( (brew list --formula -1; brew list --cask -1) 2>/dev/null)
   for p in $pkgs; do
-    grep -qx "${p##*/}" <<<"$installed" || missing+=("$p")
+    grep -qxF "${p##*/}" <<<"$installed" || missing+=("$p")
   done
   if (( ${#missing[@]} )); then
     sudo_once
@@ -191,7 +191,7 @@ install_fedora_packages() {
   local installed apps=() app
   installed=$(flatpak list --app --columns=application)
   for app in $(list flatpak); do
-    grep -qx "$app" <<<"$installed" || apps+=("$app")
+    grep -qxF "$app" <<<"$installed" || apps+=("$app")
   done
   if (( ${#apps[@]} )); then
     run flatpak install --user -y --noninteractive flathub "${apps[@]}"
@@ -486,7 +486,7 @@ else
   ext_args=()
   while IFS= read -r ext; do
     [[ -z $ext ]] && continue
-    if grep -qix "$ext" <<<"$installed"; then
+    if grep -qixF "$ext" <<<"$installed"; then
       info "ya instalada: $ext"
     else
       ext_args+=(--install-extension "$ext")
