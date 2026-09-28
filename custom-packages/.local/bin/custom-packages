@@ -138,6 +138,10 @@ newer() {
   [[ $(printf '%s\n' "$installed" "$latest" | sort -V | tail -1) == "$latest" ]]
 }
 
+# Filtros de update e install
+outdated() { [[ -n ${INSTALLED[$1]} ]] && newer "$1"; }
+missing() { [[ -z ${INSTALLED[$1]} ]]; }
+
 # Pide confirmación salvo con -y
 confirm() {
   [[ $YES == yes ]] && return 0
@@ -165,6 +169,30 @@ apply() {
     fi
   done
   return $failed
+}
+
+# Lo común de update e install: elige los programas que pasan el filtro, los muestra, pide confirmación y los instala.
+# $1 = filtro (outdated o missing), $2 = mensaje si no hay ninguno, $3 = título de la lista, $4 = pregunta
+select_and_apply() {
+  local filter=$1 none=$2 title=$3 question=$4 p name todo=()
+  fetch
+  for p in "${PKGS[@]}"; do
+    "$filter" "$p" && todo+=("$p")
+  done
+  if (( ! ${#todo[@]} )); then
+    info "$none"; return 0
+  fi
+  step "$title"
+  for p in "${todo[@]}"; do
+    name=${p}_name
+    if [[ -n ${INSTALLED[$p]} ]]; then
+      info "${!name}: ${INSTALLED[$p]} → ${LATEST[$p]}"
+    else
+      info "${!name} ${LATEST[$p]}"
+    fi
+  done
+  confirm "$question" || return 0
+  apply "${todo[@]}"
 }
 
 usage() {
@@ -222,34 +250,8 @@ case "$CMD" in
       echo
     done
     ;;
-  update)
-    fetch
-    todo=()
-    for p in "${PKGS[@]}"; do
-      [[ -n ${INSTALLED[$p]} ]] && newer "$p" && todo+=("$p")
-    done
-    if (( ! ${#todo[@]} )); then
-      info "todo al día"; exit 0
-    fi
-    step "Actualizaciones disponibles"
-    for p in "${todo[@]}"; do name=${p}_name; info "${!name}: ${INSTALLED[$p]} → ${LATEST[$p]}"; done
-    confirm "Actualizar" || exit 0
-    apply "${todo[@]}"
-    ;;
-  install)
-    fetch
-    todo=()
-    for p in "${PKGS[@]}"; do
-      [[ -z ${INSTALLED[$p]} ]] && todo+=("$p")
-    done
-    if (( ! ${#todo[@]} )); then
-      info "todo instalado"; exit 0
-    fi
-    step "Por instalar"
-    for p in "${todo[@]}"; do name=${p}_name; info "${!name} ${LATEST[$p]}"; done
-    confirm "Instalar" || exit 0
-    apply "${todo[@]}"
-    ;;
+  update) select_and_apply outdated "todo al día" "Actualizaciones disponibles" "Actualizar" ;;
+  install) select_and_apply missing "todo instalado" "Por instalar" "Instalar" ;;
   -h|--help|help) usage ;;
   *) usage 1 ;;
 esac
