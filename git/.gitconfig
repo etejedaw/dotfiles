@@ -16,11 +16,11 @@
 	lowSpeedTime = 60
 
 [credential "https://github.com"]
-	helper = 
+	helper =
 	helper = !gh auth git-credential
-	
+
 [credential "https://gist.github.com"]
-	helper = 
+	helper =
 	helper = !gh auth git-credential
 
 # Config solo de este equipo (NO está en el repo). Va al final para pisar lo de arriba.
