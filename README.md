@@ -158,6 +158,10 @@ Como `~/.gitconfig` es un symlink al repo, `git config --global` escribe en el r
 git config --file ~/.gitconfig.local push.useForceIfIncludes true
 ```
 
+Los repos nuevos (`git init`) empiezan en la rama `main` (`init.defaultBranch`), igual que en GitHub.
+
+El primer `git push` de una rama nueva la crea en el remoto y la deja enlazada (`push.autoSetupRemote`), sin tener que escribir `git push -u origin <rama>`.
+
 Ese ejemplo es el que uso en el equipo donde hago rebase. Con `git-auto-fetch`, las referencias remotas se actualizan solas, y `git push --force-with-lease` puede pisar commits ajenos que nunca viste. `push.useForceIfIncludes` hace que además exija que esos commits estén integrados en tu rama.
 
 ### SSH

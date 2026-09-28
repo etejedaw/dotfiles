@@ -2,8 +2,14 @@
 	name = Esteban Tejeda
 	email = etejedaw@hotmail.com
 
+[init]
+	defaultBranch = main
+
 [core]
 	editor = nano
+
+[push]
+	autoSetupRemote = true
 
 [http]
 	lowSpeedLimit = 1000
