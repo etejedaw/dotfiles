@@ -219,7 +219,8 @@ step "herdr"
 if [[ -x $HOME/.local/bin/herdr ]]; then
   info "ya instalado"
 else
-  run bash -c 'curl -fsSL https://herdr.dev/install.sh | sh'
+  # pipefail en cada `curl | sh`: si curl falla, la shell recibe un script vacío y el paso terminaría bien
+  run bash -o pipefail -c 'curl -fsSL https://herdr.dev/install.sh | sh'
 fi
 
 # --- 2. Symlinks con Stow ---
@@ -349,7 +350,7 @@ else
     info "ya instalada"
   else
     run mkdir -p "$FONT_DIR"
-    run bash -c "curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz | tar -xJ -C '$FONT_DIR'"
+    run bash -o pipefail -c "curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz | tar -xJ -C '$FONT_DIR'"
     run fc-cache -f
   fi
 fi
@@ -418,7 +419,7 @@ if [[ -s $NVM_DIR/nvm.sh ]]; then
   info "nvm ya instalado"
 else
   # PROFILE=/dev/null: que no escriba en ~/.zshrc (lo carga el plugin nvm de Oh My Zsh)
-  run bash -c "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | PROFILE=/dev/null bash"
+  run bash -o pipefail -c "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | PROFILE=/dev/null bash"
 fi
 if [[ $DRY_RUN == yes ]]; then
   info "[dry-run] nvm install --lts"
@@ -440,7 +441,7 @@ if [[ -x $HOME/.local/bin/claude ]]; then
   info "ya instalado"
 else
   # Con ~/.local/bin en el PATH el instalador no tiene que agregarlo a la config de la shell (ya lo hace .zshrc)
-  run env PATH="$HOME/.local/bin:$PATH" bash -c 'curl -fsSL https://claude.ai/install.sh | bash'
+  run env PATH="$HOME/.local/bin:$PATH" bash -o pipefail -c 'curl -fsSL https://claude.ai/install.sh | bash'
 fi
 
 step "Skills de Claude"
