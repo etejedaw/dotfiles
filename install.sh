@@ -351,6 +351,24 @@ configure_vicinae_gnome() {
     'vicinae deeplink vicinae://launch/clipboard/history?toggle=true' '<Super><Shift>v'
 }
 
+# Sin esta extensión GNOME no muestra íconos en la bandeja, como el de Nextcloud; KDE los muestra sin nada extra.
+# No va en packages/dnf porque depende de gnome-shell: en KDE lo arrastraría.
+enable_gnome_appindicator() {
+  step "Íconos en la bandeja de GNOME (AppIndicator)"
+  if rpm -q gnome-shell-extension-appindicator >/dev/null 2>&1; then
+    info "extensión ya instalada"
+  else
+    sudo_once
+    run sudo dnf install -y gnome-shell-extension-appindicator
+  fi
+  # Sin sesión gráfica, gsettings no guarda los cambios (y no avisa)
+  if [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
+    warn "sin sesión gráfica (¿SSH?): la extensión AppIndicator se activará al ejecutar install.sh desde el escritorio"
+    return
+  fi
+  gsettings_add org.gnome.shell enabled-extensions appindicatorsupport@rgcjonas.gmail.com
+}
+
 # La llave que ssh/.ssh/config usa para github.com. Sin passphrase, para que el script no se detenga a pedirla.
 # Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales del final.
 create_ssh_key() {
@@ -569,7 +587,7 @@ EOF
     echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
   fi
   if is_gnome; then
-    echo "    - GNOME: cerrar sesión y volver a entrar, para que cargue la extensión de Vicinae y arranque su servidor"
+    echo "    - GNOME: cerrar sesión y volver a entrar, para que carguen las extensiones de Vicinae y AppIndicator y arranque el servidor de Vicinae"
   fi
   if [[ $DOCKER_GROUP_ADDED == yes ]]; then
     echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
@@ -598,7 +616,10 @@ main() {
   install_herdr
 
   link_dotfiles
-  if is_gnome; then configure_vicinae_gnome; fi
+  if is_gnome; then
+    configure_vicinae_gnome
+    enable_gnome_appindicator
+  fi
   create_ssh_key
 
   install_font
