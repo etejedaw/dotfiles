@@ -26,6 +26,8 @@ jobs:
     container: fedora:latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: dnf (common + dnf)
         run: |
           dnf install -y -q dnf5-plugins
@@ -49,6 +51,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Homebrew (common + brew)
         run: |
           fail=0
