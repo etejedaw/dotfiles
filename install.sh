@@ -5,6 +5,8 @@
 #   ./install.sh --dry-run  muestra lo que haría, sin cambiar nada
 #
 # Todo lo que muestra queda también, sin colores, en ~/.local/state/dotfiles/install.log (solo la última ejecución).
+#
+# Se ejecuta también con el bash 3.2 de un Mac recién instalado: nada de mapfile, arreglos asociativos ni ${var,,}.
 
 set -euo pipefail
 
@@ -13,14 +15,11 @@ PACKAGES="$DOTFILES/packages"
 BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
 NVM_VERSION="v0.40.8"
 LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install.log"
+
+# Los define main al empezar
 DRY_RUN=no
-# Una opción desconocida detiene todo: con un --dry-run mal escrito se haría la instalación real
-for arg; do
-  case "$arg" in
-    -n|--dry-run) DRY_RUN=yes ;;
-    *) echo "Opción desconocida: $arg (uso: ./install.sh [--dry-run])" >&2; exit 1 ;;
-  esac
-done
+OS=
+KDE=no
 
 # --- Utilidades ---
 
@@ -55,53 +54,92 @@ on_exit() {
   if [[ -n $SUDO_KEEPALIVE_PID ]]; then kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true; fi
   if (( code )); then warn "install.sh terminó con error (código $code). Log: ${LOG/#$HOME/\~}"; fi
 }
-trap on_exit EXIT
 
 # Lee una lista de packages/ sin comentarios ni líneas vacías
 list() { sed 's/#.*//' "$PACKAGES/$1" | xargs -n1; }
 
-# --- Log ---
+is_gnome() { [[ $OS == Linux && $KDE == no ]]; }
+
+# Agrega un valor a una lista de gsettings, si no está ya
+gsettings_add() {
+  local schema=$1 key=$2 value=$3 list
+  list=$(gsettings get "$schema" "$key")
+  [[ $list == *"'$value'"* ]] && return
+  list=${list#@as }
+  if [[ $list == '[]' ]]; then list="['$value']"; else list="${list%]}, '$value']"; fi
+  run gsettings set "$schema" "$key" "$list"
+}
+
+# Cambia un valor de gsettings, si no lo tiene ya. $1 = schema (con ruta, si es relocatable), $2 = clave,
+# $3 = valor en formato GVariant
+gsettings_set() {
+  if [[ "$(gsettings get "$1" "$2")" == "$3" ]]; then
+    info "ya configurado: $2"
+  else
+    run gsettings set "$1" "$2" "$3"
+  fi
+}
+
+# Atajo personalizado de GNOME. $1 = id, $2 = nombre, $3 = comando, $4 = atajo
+gnome_shortcut() {
+  local path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$1/"
+  local schema="org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$path"
+  gsettings_add org.gnome.settings-daemon.plugins.media-keys custom-keybindings "$path"
+  run gsettings set "$schema" name "'$2'"
+  run gsettings set "$schema" command "'$3'"
+  run gsettings set "$schema" binding "'$4'"
+}
+
+# --- Inicio ---
+
+# Una opción desconocida detiene todo: con un --dry-run mal escrito se haría la instalación real
+parse_args() {
+  local arg
+  for arg; do
+    case "$arg" in
+      -n|--dry-run) DRY_RUN=yes ;;
+      *) echo "Opción desconocida: $arg (uso: ./install.sh [--dry-run])" >&2; exit 1 ;;
+    esac
+  done
+}
 
 # La salida va a la terminal y al log (sin los códigos de color). La contraseña de sudo no pasa por aquí: sudo la
 # pide directo en la terminal. Con -E, la trampa ERR también ve los errores dentro de funciones, y anota el comando
 # que falló y su línea, para no tener que adivinarlo leyendo la salida.
-mkdir -p "$(dirname "$LOG")"
-printf '== install.sh %s · %s · %s\n' "$*" "$(date '+%Y-%m-%d %H:%M:%S')" "$(uname -srm)" >"$LOG"
-exec > >(tee >(sed $'s/\e\\[[0-9;]*m//g' >>"$LOG")) 2>&1
-set -E
-trap 'warn "falló en la línea $LINENO: $BASH_COMMAND"' ERR
+start_log() {
+  mkdir -p "$(dirname "$LOG")"
+  printf '== install.sh %s · %s · %s\n' "$*" "$(date '+%Y-%m-%d %H:%M:%S')" "$(uname -srm)" >"$LOG"
+  exec > >(tee >(sed $'s/\e\\[[0-9;]*m//g' >>"$LOG")) 2>&1
+  set -E
+  trap 'warn "falló en la línea $LINENO: $BASH_COMMAND"' ERR
+}
 
-# --- Detección del sistema ---
+detect_system() {
+  OS="$(uname)"
+  case "$OS" in
+    Darwin) ;;
+    Linux)
+      [[ -f /etc/fedora-release ]] || { echo "Solo se soporta Fedora en Linux." >&2; exit 1; } ;;
+    *) echo "Sistema no soportado: $OS" >&2; exit 1 ;;
+  esac
+  [[ $EUID -eq 0 ]] && { echo "No ejecutes install.sh como root: usa tu usuario (pide sudo cuando lo necesita)." >&2; exit 1; }
 
-OS="$(uname)"
-case "$OS" in
-  Darwin) ;;
-  Linux)
-    [[ -f /etc/fedora-release ]] || { echo "Solo se soporta Fedora en Linux." >&2; exit 1; } ;;
-  *) echo "Sistema no soportado: $OS" >&2; exit 1 ;;
-esac
-[[ $EUID -eq 0 ]] && { echo "No ejecutes install.sh como root: usa tu usuario (pide sudo cuando lo necesita)." >&2; exit 1; }
-
-# Escritorio: se detecta por lo instalado, así funciona también por SSH. En Fedora solo se soportan KDE y GNOME.
-KDE=no
-if [[ $OS == Linux ]]; then
-  if command -v plasmashell >/dev/null; then
-    KDE=yes
-  elif ! command -v gnome-shell >/dev/null; then
-    echo "No se encontró KDE ni GNOME: solo se soporta Fedora con escritorio." >&2; exit 1
+  # Escritorio: se detecta por lo instalado, así funciona también por SSH. En Fedora solo se soportan KDE y GNOME.
+  if [[ $OS == Linux ]]; then
+    if command -v plasmashell >/dev/null; then
+      KDE=yes
+    elif ! command -v gnome-shell >/dev/null; then
+      echo "No se encontró KDE ni GNOME: solo se soporta Fedora con escritorio." >&2; exit 1
+    fi
   fi
-fi
-
-step "Sistema: $OS · KDE: $KDE · dry-run: $DRY_RUN"
-
-# Estado del repo al empezar: al final se avisa si algún instalador modificó archivos del repo
-REPO_STATUS_BEFORE=$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)
+}
 
 # --- 1. Paquetes ---
 
 DOCKER_GROUP_ADDED=no  # si es yes, al final se avisa que hay que volver a entrar
 
 install_mac_packages() {
+  local b
   if ! command -v brew >/dev/null; then
     step "Instalando Homebrew"
     sudo_once
@@ -200,28 +238,30 @@ install_fedora_packages() {
   fi
 }
 
-if [[ $OS == Darwin ]]; then install_mac_packages; else install_fedora_packages; fi
-
 # custom-packages baja de GitHub lo que no está en dnf ni en Flathub (en Fedora: AFFiNE, git-flow-next, balenaEtcher,
 # Vicinae y su extensión para GNOME) o que Homebrew no deja instalar (en Mac: MarkText).
 # Solo instala los que faltan; las actualizaciones son a mano, con `custom-packages update`.
 # Si falla (GitHub caído, por ejemplo), se avisa y el resto de la instalación sigue.
-step "Programas de GitHub (custom-packages)"
-custom_packages="$DOTFILES/custom-packages/.local/bin/custom-packages"
-if [[ $DRY_RUN == yes ]]; then
-  "$custom_packages" ls || warn "custom-packages falló"
-else
-  "$custom_packages" install -y || warn "custom-packages falló: revisa ~/.local/state/dotfiles/custom-packages.log"
-fi
+install_custom_packages() {
+  step "Programas de GitHub (custom-packages)"
+  local custom_packages="$DOTFILES/custom-packages/.local/bin/custom-packages"
+  if [[ $DRY_RUN == yes ]]; then
+    "$custom_packages" ls || warn "custom-packages falló"
+  else
+    "$custom_packages" install -y || warn "custom-packages falló: revisa ~/.local/state/dotfiles/custom-packages.log"
+  fi
+}
 
 # Mismo instalador en Mac y Fedora: deja el binario en ~/.local/bin y se actualiza con `herdr update`
-step "herdr"
-if [[ -x $HOME/.local/bin/herdr ]]; then
-  info "ya instalado"
-else
-  # pipefail en cada `curl | sh`: si curl falla, la shell recibe un script vacío y el paso terminaría bien
-  run bash -o pipefail -c 'curl -fsSL https://herdr.dev/install.sh | sh'
-fi
+install_herdr() {
+  step "herdr"
+  if [[ -x $HOME/.local/bin/herdr ]]; then
+    info "ya instalado"
+  else
+    # pipefail en cada `curl | sh`: si curl falla, la shell recibe un script vacío y el paso terminaría bien
+    run bash -o pipefail -c 'curl -fsSL https://herdr.dev/install.sh | sh'
+  fi
+}
 
 # --- 2. Symlinks con Stow ---
 
@@ -260,46 +300,29 @@ stow_pkg() {
   fi
 }
 
-step "Symlinks"
-# ~/.ssh tiene que existir con 700 antes de enlazar (si lo crea Stow queda en 755)
-run mkdir -p "$HOME/.ssh/config.d"
-run chmod 700 "$HOME/.ssh" "$HOME/.ssh/config.d"
+link_dotfiles() {
+  step "Symlinks"
+  # ~/.ssh tiene que existir con 700 antes de enlazar (si lo crea Stow queda en 755)
+  run mkdir -p "$HOME/.ssh/config.d"
+  run chmod 700 "$HOME/.ssh" "$HOME/.ssh/config.d"
 
-# custom-packages deja el comando en ~/.local/bin, para `custom-packages update`
-for pkg in zsh git ssh claude herdr custom-packages; do stow_pkg "$pkg"; done
-if [[ $OS == Darwin ]]; then
-  stow_pkg vscodium '\.var'
-  stow_pkg hyper
-else
-  stow_pkg vscodium 'Library'
-  stow_pkg vicinae
-  if [[ $KDE == yes ]]; then stow_pkg konsole; fi
-fi
-run chmod 600 "$DOTFILES/ssh/.ssh/config"
+  # custom-packages deja el comando en ~/.local/bin, para `custom-packages update`
+  local pkg
+  for pkg in zsh git ssh claude herdr custom-packages; do stow_pkg "$pkg"; done
+  if [[ $OS == Darwin ]]; then
+    stow_pkg vscodium '\.var'
+    stow_pkg hyper
+  else
+    stow_pkg vscodium 'Library'
+    stow_pkg vicinae
+    if [[ $KDE == yes ]]; then stow_pkg konsole; fi
+  fi
+  run chmod 600 "$DOTFILES/ssh/.ssh/config"
+}
 
 # En KDE, los atajos de Vicinae salen del .desktop del paquete vicinae y lo arranca ~/.config/autostart.
 # En GNOME hay que registrarlo todo con gsettings.
-if [[ $OS == Linux && $KDE == no ]]; then
-  # Agrega un valor a una lista de gsettings, si no está ya
-  gsettings_add() {
-    local schema=$1 key=$2 value=$3 list
-    list=$(gsettings get "$schema" "$key")
-    [[ $list == *"'$value'"* ]] && return
-    list=${list#@as }
-    if [[ $list == '[]' ]]; then list="['$value']"; else list="${list%]}, '$value']"; fi
-    run gsettings set "$schema" "$key" "$list"
-  }
-
-  # Atajo personalizado de GNOME. $1 = id, $2 = nombre, $3 = comando, $4 = atajo
-  gnome_shortcut() {
-    local path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$1/"
-    local schema="org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$path"
-    gsettings_add org.gnome.settings-daemon.plugins.media-keys custom-keybindings "$path"
-    run gsettings set "$schema" name "'$2'"
-    run gsettings set "$schema" command "'$3'"
-    run gsettings set "$schema" binding "'$4'"
-  }
-
+configure_vicinae_gnome() {
   step "Vicinae en GNOME"
   # Arranca el servidor con la sesión gráfica. Sin --now: por SSH no hay sesión gráfica donde arrancarlo.
   if systemctl --user is-enabled --quiet vicinae.service 2>/dev/null; then
@@ -310,121 +333,129 @@ if [[ $OS == Linux && $KDE == no ]]; then
   # Sin sesión gráfica, gsettings no guarda los cambios (y no avisa)
   if [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
     warn "sin sesión gráfica (¿SSH?): la extensión y los atajos de Vicinae se aplicarán al ejecutar install.sh desde el escritorio"
-  else
-    # La instala custom-packages; GNOME la carga al volver a entrar a la sesión
-    gsettings_add org.gnome.shell enabled-extensions vicinae@dagimg-dot
-    # Los mismos atajos que en KDE. GNOME usa Super+Espacio para cambiar el idioma del teclado: se deja solo en la
-    # tecla de idioma del teclado.
-    if [[ $(gsettings get org.gnome.desktop.wm.keybindings switch-input-source) == *"'<Super>space'"* ]]; then
-      run gsettings set org.gnome.desktop.wm.keybindings switch-input-source "['XF86Keyboard']"
-      run gsettings set org.gnome.desktop.wm.keybindings switch-input-source-backward "['<Shift>XF86Keyboard']"
-    fi
-    gnome_shortcut vicinae Vicinae 'vicinae toggle' '<Super>space'
-    gnome_shortcut vicinae-clipboard 'Vicinae clipboard' \
-      'vicinae deeplink vicinae://launch/clipboard/history?toggle=true' '<Super><Shift>v'
+    return
   fi
-fi
+  # La instala custom-packages; GNOME la carga al volver a entrar a la sesión
+  gsettings_add org.gnome.shell enabled-extensions vicinae@dagimg-dot
+  # Los mismos atajos que en KDE. GNOME usa Super+Espacio para cambiar el idioma del teclado: se deja solo en la
+  # tecla de idioma del teclado.
+  if [[ $(gsettings get org.gnome.desktop.wm.keybindings switch-input-source) == *"'<Super>space'"* ]]; then
+    run gsettings set org.gnome.desktop.wm.keybindings switch-input-source "['XF86Keyboard']"
+    run gsettings set org.gnome.desktop.wm.keybindings switch-input-source-backward "['<Shift>XF86Keyboard']"
+  fi
+  gnome_shortcut vicinae Vicinae 'vicinae toggle' '<Super>space'
+  gnome_shortcut vicinae-clipboard 'Vicinae clipboard' \
+    'vicinae deeplink vicinae://launch/clipboard/history?toggle=true' '<Super><Shift>v'
+}
 
 # La llave que ssh/.ssh/config usa para github.com. Sin passphrase, para que el script no se detenga a pedirla.
 # Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales del final.
-step "Llave SSH para GitHub"
-if [[ -f $HOME/.ssh/id_ed25519 ]]; then
-  info "ya existe"
-else
-  run ssh-keygen -q -t ed25519 -N '' -C "$USER@${HOSTNAME%%.*}" -f "$HOME/.ssh/id_ed25519"
-  info "creada: ~/.ssh/id_ed25519"
-fi
-
-# --- 3. Fuente ---
-
-step "Fuente JetBrainsMono Nerd Font"
-if [[ $OS == Darwin ]]; then
-  if brew list --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1; then
-    info "ya instalada"
+create_ssh_key() {
+  step "Llave SSH para GitHub"
+  if [[ -f $HOME/.ssh/id_ed25519 ]]; then
+    info "ya existe"
   else
-    run brew install --cask font-jetbrains-mono-nerd-font
+    run ssh-keygen -q -t ed25519 -N '' -C "$USER@${HOSTNAME%%.*}" -f "$HOME/.ssh/id_ed25519"
+    info "creada: ~/.ssh/id_ed25519"
   fi
-else
-  FONT_DIR="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
-  if compgen -G "$FONT_DIR/*.ttf" >/dev/null; then
+}
+
+# --- 3. Fuente y terminal ---
+
+install_font() {
+  step "Fuente JetBrainsMono Nerd Font"
+  if [[ $OS == Darwin ]]; then
+    if brew list --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1; then
+      info "ya instalada"
+    else
+      run brew install --cask font-jetbrains-mono-nerd-font
+    fi
+    return
+  fi
+  local font_dir="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
+  if compgen -G "$font_dir/*.ttf" >/dev/null; then
     info "ya instalada"
   else
-    run mkdir -p "$FONT_DIR"
-    run bash -o pipefail -c "curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz | tar -xJ -C '$FONT_DIR'"
+    run mkdir -p "$font_dir"
+    run bash -o pipefail -c "curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz | tar -xJ -C '$font_dir'"
     run fc-cache -f
   fi
-fi
+}
 
 # Ptyxis guarda su configuración en dconf, no en archivos: se aplica con gsettings. Usa la misma fuente que Konsole
 # y abre las pestañas y ventanas nuevas en la carpeta de la actual.
-if [[ $OS == Linux && $KDE == no ]]; then
+configure_ptyxis() {
   step "Ptyxis (terminal de GNOME)"
   if ! gsettings list-keys org.gnome.Ptyxis >/dev/null 2>&1; then
     warn "Ptyxis no está instalado: se omite su configuración"
-  elif [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
-    warn "sin sesión gráfica (¿SSH?): la configuración de Ptyxis se aplicará al ejecutar install.sh desde el escritorio"
-  else
-    # $1 = schema (con ruta, si es un perfil), $2 = clave, $3 = valor en formato GVariant
-    ptyxis_set() {
-      if [[ "$(gsettings get "$1" "$2")" == "$3" ]]; then
-        info "ya configurado: $2"
-      else
-        run gsettings set "$1" "$2" "$3"
-      fi
-    }
-    ptyxis_set org.gnome.Ptyxis use-system-font false
-    ptyxis_set org.gnome.Ptyxis font-name "'JetBrainsMono Nerd Font Mono 11'"
-    # Si Ptyxis nunca se abrió no hay perfil todavía: se crea uno y queda como predeterminado
-    profile=$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")
-    if [[ -z $profile ]]; then
-      profile=$(tr -d - </proc/sys/kernel/random/uuid)
-      run gsettings set org.gnome.Ptyxis profile-uuids "['$profile']"
-      run gsettings set org.gnome.Ptyxis default-profile-uuid "'$profile'"
-    fi
-    ptyxis_set "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$profile/" preserve-directory "'always'"
+    return
   fi
-fi
+  if [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
+    warn "sin sesión gráfica (¿SSH?): la configuración de Ptyxis se aplicará al ejecutar install.sh desde el escritorio"
+    return
+  fi
+  gsettings_set org.gnome.Ptyxis use-system-font false
+  gsettings_set org.gnome.Ptyxis font-name "'JetBrainsMono Nerd Font Mono 11'"
+  # Si Ptyxis nunca se abrió no hay perfil todavía: se crea uno y queda como predeterminado
+  local profile
+  profile=$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")
+  if [[ -z $profile ]]; then
+    profile=$(tr -d - </proc/sys/kernel/random/uuid)
+    run gsettings set org.gnome.Ptyxis profile-uuids "['$profile']"
+    run gsettings set org.gnome.Ptyxis default-profile-uuid "'$profile'"
+  fi
+  gsettings_set "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$profile/" preserve-directory "'always'"
+}
 
 # --- 4. Oh My Zsh, Powerlevel10k y plugins ---
 
-step "Oh My Zsh"
-if [[ -d $HOME/.oh-my-zsh ]]; then
-  info "ya instalado"
-else
-  # --keep-zshrc: no toca el ~/.zshrc (que ya es el symlink al repo)
-  run bash -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc'
-fi
+install_oh_my_zsh() {
+  step "Oh My Zsh"
+  if [[ -d $HOME/.oh-my-zsh ]]; then
+    info "ya instalado"
+  else
+    # --keep-zshrc: no toca el ~/.zshrc (que ya es el symlink al repo)
+    run bash -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc'
+  fi
+}
 
-step "Powerlevel10k"
-P10K_DIR="$HOME/.oh-my-zsh/custom/themes/powerlevel10k"
-if [[ -d $P10K_DIR ]]; then
-  info "ya instalado"
-else
-  run git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
-fi
+install_powerlevel10k() {
+  step "Powerlevel10k"
+  local p10k_dir="$HOME/.oh-my-zsh/custom/themes/powerlevel10k"
+  if [[ -d $p10k_dir ]]; then
+    info "ya instalado"
+  else
+    run git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$p10k_dir"
+  fi
+}
 
-step "Plugins de zsh (del gestor de paquetes)"
-if [[ $OS == Darwin ]]; then SHARE="$(brew --prefix)/share"; else SHARE=/usr/share; fi
-for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
-  dir="$HOME/.oh-my-zsh/custom/plugins/$plugin"
-  run mkdir -p "$dir"
-  run ln -sfn "$SHARE/$plugin/$plugin.zsh" "$dir/$plugin.plugin.zsh"
-done
+link_zsh_plugins() {
+  step "Plugins de zsh (del gestor de paquetes)"
+  local share plugin dir
+  if [[ $OS == Darwin ]]; then share="$(brew --prefix)/share"; else share=/usr/share; fi
+  for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
+    dir="$HOME/.oh-my-zsh/custom/plugins/$plugin"
+    run mkdir -p "$dir"
+    run ln -sfn "$share/$plugin/$plugin.zsh" "$dir/$plugin.plugin.zsh"
+  done
+}
 
 # --- 5. nvm y Node ---
 
-step "nvm y Node LTS"
-export NVM_DIR="$HOME/.nvm"
-if [[ -s $NVM_DIR/nvm.sh ]]; then
-  info "nvm ya instalado"
-else
-  # PROFILE=/dev/null: que no escriba en ~/.zshrc (lo carga el plugin nvm de Oh My Zsh)
-  run bash -o pipefail -c "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | PROFILE=/dev/null bash"
-fi
-if [[ $DRY_RUN == yes ]]; then
-  info "[dry-run] nvm install --lts"
-  info "[dry-run] nvm alias default 'lts/*'"
-else
+install_node() {
+  step "nvm y Node LTS"
+  export NVM_DIR="$HOME/.nvm"
+  if [[ -s $NVM_DIR/nvm.sh ]]; then
+    info "nvm ya instalado"
+  else
+    # PROFILE=/dev/null: que no escriba en ~/.zshrc (lo carga el plugin nvm de Oh My Zsh)
+    run bash -o pipefail -c "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | PROFILE=/dev/null bash"
+  fi
+  if [[ $DRY_RUN == yes ]]; then
+    info "[dry-run] nvm install --lts"
+    info "[dry-run] nvm alias default 'lts/*'"
+    return
+  fi
   set +u
   # shellcheck source=/dev/null
   . "$NVM_DIR/nvm.sh"
@@ -432,58 +463,68 @@ else
   # Sin esto el default queda fijo en la primera versión instalada y no sigue a la LTS nueva
   nvm alias default 'lts/*'
   set -u
-fi
+}
 
 # --- 6. Claude Code ---
 
-step "Claude Code"
-if [[ -x $HOME/.local/bin/claude ]]; then
-  info "ya instalado"
-else
-  # Con ~/.local/bin en el PATH el instalador no tiene que agregarlo a la config de la shell (ya lo hace .zshrc)
-  run env PATH="$HOME/.local/bin:$PATH" bash -o pipefail -c 'curl -fsSL https://claude.ai/install.sh | bash'
-fi
+install_claude_code() {
+  step "Claude Code"
+  if [[ -x $HOME/.local/bin/claude ]]; then
+    info "ya instalado"
+  else
+    # Con ~/.local/bin en el PATH el instalador no tiene que agregarlo a la config de la shell (ya lo hace .zshrc)
+    run env PATH="$HOME/.local/bin:$PATH" bash -o pipefail -c 'curl -fsSL https://claude.ai/install.sh | bash'
+  fi
+}
 
-step "Skills de Claude"
-if [[ -e $HOME/.claude/skills/herdr ]]; then
-  info "herdr ya instalada"
-else
-  run npx -y skills@latest add herdrdev/herdr --skill herdr -g -a claude-code -y
-fi
-if [[ -e $HOME/.claude/skills/find-docs ]]; then
-  info "Context7 ya configurado"
-else
-  # Modo CLI + skill (sin servidor MCP). Abre el navegador para iniciar sesión en Context7.
-  run npx -y ctx7@latest setup --claude --cli -y
-fi
+install_claude_skills() {
+  step "Skills de Claude"
+  if [[ -e $HOME/.claude/skills/herdr ]]; then
+    info "herdr ya instalada"
+  else
+    run npx -y skills@latest add herdrdev/herdr --skill herdr -g -a claude-code -y
+  fi
+  if [[ -e $HOME/.claude/skills/find-docs ]]; then
+    info "Context7 ya configurado"
+  else
+    # Modo CLI + skill (sin servidor MCP). Abre el navegador para iniciar sesión en Context7.
+    run npx -y ctx7@latest setup --claude --cli -y
+  fi
+}
 
 # settings.json no está en el repo (Claude Code lo reescribe), así que el hook se registra aquí
-step "Hook de herdr para Claude"
-claude_settings="$HOME/.claude/settings.json"
-# shellcheck disable=SC2016  # $HOME queda literal en settings.json; lo expande la shell que lanza el hook
-herdr_hook='$HOME/.claude/hooks/herdr-orchestrator.sh'
-if [[ -f $claude_settings ]] && jq -e --arg c "$herdr_hook" '.hooks.SessionStart[]?.hooks[]? | select(.command == $c)' "$claude_settings" >/dev/null; then
-  info "ya registrado"
-elif [[ $DRY_RUN == yes ]]; then
-  info "[dry-run] registrar $herdr_hook en $claude_settings"
-else
-  [[ -f $claude_settings ]] || echo '{}' >"$claude_settings"
-  merged="$(jq --arg c "$herdr_hook" '.hooks.SessionStart += [{hooks: [{type: "command", command: $c}]}]' "$claude_settings")"
-  printf '%s\n' "$merged" >"$claude_settings"
-fi
+register_herdr_hook() {
+  step "Hook de herdr para Claude"
+  local claude_settings="$HOME/.claude/settings.json" herdr_hook merged
+  # shellcheck disable=SC2016  # $HOME queda literal en settings.json; lo expande la shell que lanza el hook
+  herdr_hook='$HOME/.claude/hooks/herdr-orchestrator.sh'
+  if [[ -f $claude_settings ]] && jq -e --arg c "$herdr_hook" '.hooks.SessionStart[]?.hooks[]? | select(.command == $c)' "$claude_settings" >/dev/null; then
+    info "ya registrado"
+  elif [[ $DRY_RUN == yes ]]; then
+    info "[dry-run] registrar $herdr_hook en $claude_settings"
+  else
+    [[ -f $claude_settings ]] || echo '{}' >"$claude_settings"
+    merged="$(jq --arg c "$herdr_hook" '.hooks.SessionStart += [{hooks: [{type: "command", command: $c}]}]' "$claude_settings")"
+    printf '%s\n' "$merged" >"$claude_settings"
+  fi
+}
 
 # --- 7. Extensiones de VSCodium ---
 
-step "Extensiones de VSCodium"
-if [[ $OS == Darwin ]]; then codium_cmd=(codium); else codium_cmd=(flatpak run com.vscodium.codium); fi
-if [[ $OS == Darwin ]] && ! command -v codium >/dev/null; then
-  warn "VSCodium no está instalado: se omiten las extensiones"
-elif [[ $OS == Linux ]] && ! flatpak info com.vscodium.codium >/dev/null 2>&1; then
-  warn "VSCodium no está instalado: se omiten las extensiones"
-else
+install_codium_extensions() {
+  step "Extensiones de VSCodium"
+  local codium_cmd installed ext ext_args=()
+  if [[ $OS == Darwin ]]; then codium_cmd=(codium); else codium_cmd=(flatpak run com.vscodium.codium); fi
+  if [[ $OS == Darwin ]] && ! command -v codium >/dev/null; then
+    warn "VSCodium no está instalado: se omiten las extensiones"
+    return
+  fi
+  if [[ $OS == Linux ]] && ! flatpak info com.vscodium.codium >/dev/null 2>&1; then
+    warn "VSCodium no está instalado: se omiten las extensiones"
+    return
+  fi
   installed=$("${codium_cmd[@]}" --list-extensions 2>/dev/null || true)
   # Todas en una sola llamada: en Fedora cada llamada arranca el flatpak de nuevo (lento y con muchos avisos)
-  ext_args=()
   while IFS= read -r ext; do
     [[ -z $ext ]] && continue
     if grep -qixF "$ext" <<<"$installed"; then
@@ -493,34 +534,82 @@ else
     fi
   done < "$DOTFILES/vscodium/extensions"
   if (( ${#ext_args[@]} )); then run "${codium_cmd[@]}" "${ext_args[@]}"; fi
-fi
+}
 
 # --- 8. Shell por defecto ---
 
-step "Shell por defecto"
-if [[ "$(basename "${SHELL:-}")" == zsh ]]; then
-  info "ya es zsh"
-else
-  # Con sudo, chsh no pide otra vez la contraseña
-  sudo_once
-  run sudo chsh -s "$(command -v zsh)" "$USER"
-fi
+set_default_shell() {
+  step "Shell por defecto"
+  if [[ "$(basename "${SHELL:-}")" == zsh ]]; then
+    info "ya es zsh"
+  else
+    # Con sudo, chsh no pide otra vez la contraseña
+    sudo_once
+    run sudo chsh -s "$(command -v zsh)" "$USER"
+  fi
+}
 
 # --- 9. Pasos manuales ---
 
-step "Listo. Pasos manuales pendientes:"
-cat <<EOF
+# $1 = estado de `git status --porcelain` al empezar, para avisar si algún instalador modificó archivos del repo
+print_manual_steps() {
+  local repo_status_before=$1
+  step "Listo. Pasos manuales pendientes:"
+  cat <<EOF
     - gh auth login -p ssh   (navegador; ofrece subir ~/.ssh/id_ed25519.pub a GitHub: acepta)
     - Llaves SSH de los servidores: copiarlas a ~/.ssh/, y crear ~/.ssh/config.d/hosts con los HostName
     - Crear ~/.secrets (600) con los tokens y ~/.zshrc.local con lo de este equipo
     - Abrir una terminal nueva para cargar zsh
 EOF
-[[ $OS == Darwin ]] && echo "    - p10k configure, si los íconos no se ven bien"
-[[ $OS == Darwin ]] && echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
-[[ $OS == Linux && $KDE == no ]] && echo "    - GNOME: cerrar sesión y volver a entrar, para que cargue la extensión de Vicinae y arranque su servidor"
-[[ $DOCKER_GROUP_ADDED == yes ]] && echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
-[[ -d $BACKUP_DIR ]] && echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/\~}"
-if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$REPO_STATUS_BEFORE" ]]; then
-  warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/\~} diff'"
-fi
-exit 0
+  if [[ $OS == Darwin ]]; then
+    echo "    - p10k configure, si los íconos no se ven bien"
+    echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
+  fi
+  if is_gnome; then
+    echo "    - GNOME: cerrar sesión y volver a entrar, para que cargue la extensión de Vicinae y arranque su servidor"
+  fi
+  if [[ $DOCKER_GROUP_ADDED == yes ]]; then
+    echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
+  fi
+  if [[ -d $BACKUP_DIR ]]; then
+    echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/\~}"
+  fi
+  if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$repo_status_before" ]]; then
+    warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/\~} diff'"
+  fi
+}
+
+main() {
+  parse_args "$@"
+  trap on_exit EXIT
+  start_log "$@"
+  detect_system
+  step "Sistema: $OS · KDE: $KDE · dry-run: $DRY_RUN"
+  local repo_status_before
+  repo_status_before=$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)
+
+  if [[ $OS == Darwin ]]; then install_mac_packages; else install_fedora_packages; fi
+  install_custom_packages
+  install_herdr
+
+  link_dotfiles
+  if is_gnome; then configure_vicinae_gnome; fi
+  create_ssh_key
+
+  install_font
+  if is_gnome; then configure_ptyxis; fi
+
+  install_oh_my_zsh
+  install_powerlevel10k
+  link_zsh_plugins
+  install_node
+  install_claude_code
+  install_claude_skills
+  register_herdr_hook
+  install_codium_extensions
+  set_default_shell
+
+  print_manual_steps "$repo_status_before"
+}
+
+main "$@"
