@@ -27,3 +27,7 @@ jobs:
         with:
           persist-credentials: false
       - run: npx -y shellcheck install.sh custom-packages/.local/bin/custom-packages
+        env:
+          # El paquete npm baja el binario de shellcheck consultando la API de GitHub. Sin token son 60 consultas por
+          # hora compartidas entre los runners, y se agotan; con el del workflow el límite es propio del repo
+          GITHUB_TOKEN: ${{ github.token }}
