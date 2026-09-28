@@ -440,12 +440,21 @@ Supongamos que quieres versionar la configuración de `btop`, que vive en `~/.co
 
 ### Cómo está organizado
 
-El script va de arriba abajo en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Antes de la primera sección:
+Cada paso es una función (`install_font`, `configure_ptyxis`, `install_node`…), agrupadas en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Al final, `main` las llama en orden: para saber qué hace el script y en qué orden, basta con leer `main`. De arriba abajo, el archivo tiene:
 
-- **Variables:** `DOTFILES` (la carpeta del repo), `NVM_RELEASE`, `BACKUP_DIR`, `LOG`…
-- **Log:** desde el principio, toda la salida va también a `LOG` (`~/.local/state/dotfiles/install.log`), y la trampa `ERR` anota el comando y la línea de cualquier error. `on_exit` corre al salir: detiene la renovación de sudo y, si hubo error, dice dónde está el log. Si un paso necesita hacer algo al salir, agrégalo a `on_exit`: otro `trap … EXIT` lo reemplazaría.
-- **Detección:** `OS` (`Darwin` o `Linux`) y `KDE` (`yes` o `no`).
-- **Funciones de ayuda:**
+- **Constantes:** `DOTFILES` (la carpeta del repo), `PACKAGES`, `BACKUP_DIR`, `NVM_RELEASE` y `LOG`, todas `readonly`. Como `install_node` hace `source` de `nvm.sh` y un `readonly` global no se puede redeclarar con `local`, sus nombres no pueden coincidir con variables de nvm (por eso `NVM_RELEASE` y no `NVM_VERSION`).
+- **Funciones de ayuda** (tabla de abajo).
+- **Inicio**, que `main` ejecuta antes de los pasos:
+  - `parse_args`: acepta `-n`/`--dry-run` y termina con error ante cualquier otra opción, para que un `--dry-run` mal escrito no haga la instalación real. Deja `DRY_RUN` (`yes` o `no`).
+  - `start_log`: desde ahí, toda la salida va también a `LOG` (`~/.local/state/dotfiles/install.log`), y la trampa `ERR` anota el comando y la línea de cualquier error.
+  - `detect_system`: deja `OS` (`Darwin` o `Linux`) y `KDE` (`yes` o `no`).
+
+  `DRY_RUN`, `OS` y `KDE` quedan `readonly` en cuanto `main` los define. `on_exit` corre al salir: detiene la renovación de sudo y, si hubo error, dice dónde está el log. Si un paso necesita hacer algo al salir, agrégalo a `on_exit`: otro `trap … EXIT` lo reemplazaría.
+- **Los pasos**, en sus secciones numeradas, y `main "$@"` al final.
+
+El script también tiene que funcionar con el bash 3.2 de un Mac recién instalado, porque se ejecuta antes de que exista el bash de brew: nada de `mapfile`, arreglos asociativos ni `${var,,}`.
+
+Funciones de ayuda:
 
 | Función | Para qué |
 |---|---|
@@ -455,10 +464,14 @@ El script va de arriba abajo en secciones numeradas (`# --- 1. Paquetes ---`, `#
 | `list archivo` | Lee una lista de `packages/` sin comentarios |
 | `sudo_once` | Pide la contraseña de sudo si todavía no la pidió y la mantiene viva hasta el final. **Llámala antes de cada `run sudo …`** (o de un instalador que use sudo) |
 | `stow_pkg paquete [regex]` | Respalda los conflictos y enlaza el paquete. El segundo argumento es opcional y se pasa a `--ignore` |
+| `is_gnome` | Verdadero en Fedora con GNOME (`OS` es `Linux` y `KDE` es `no`) |
+| `gsettings_add schema clave valor` | Agrega un valor a una lista de gsettings, si no está ya |
+| `gsettings_set schema clave valor` | Cambia un valor de gsettings, si no lo tiene ya. El valor va en formato GVariant (`"'texto'"`, `false`…) |
+| `gnome_shortcut id nombre comando atajo` | Crea o actualiza un atajo de teclado personalizado de GNOME |
 
 ### Agregar un paquete de Stow
 
-En la sección `2. Symlinks con Stow`, agrégalo a la línea que corresponda:
+En la función `link_dotfiles`, agrégalo a la línea que corresponda:
 
 ```bash
 for pkg in zsh git ssh claude btop; do stow_pkg "$pkg"; done          # todos los equipos
@@ -467,20 +480,24 @@ if [[ $KDE == yes ]]; then stow_pkg konsole; fi                       # solo KDE
 
 ### Agregar un paso
 
-Cada paso tiene la misma forma: comprueba si ya está hecho y, si no, lo hace a través de `run`. Así el script se puede ejecutar varias veces sin romper nada.
+Cada paso es una función con la misma forma: comprueba si ya está hecho y, si no, lo hace a través de `run`. Así el script se puede ejecutar varias veces sin romper nada. Ponla en la sección que corresponda y agrega su llamada en `main`, en el lugar donde deba ejecutarse:
 
 ```bash
-step "Mi herramienta"
-if command -v mi-herramienta >/dev/null; then
-  info "ya instalada"
-else
-  run bash -c 'curl -fsSL https://ejemplo.com/install.sh | bash'
-fi
+install_mi_herramienta() {
+  step "Mi herramienta"
+  if command -v mi-herramienta >/dev/null; then
+    info "ya instalada"
+  else
+    run bash -o pipefail -c 'curl -fsSL https://ejemplo.com/install.sh | bash'
+  fi
+}
 ```
 
-- **Instaladores con `curl … | bash`:** ponlos entre comillas dentro de `run bash -c '…'`, para que con `--dry-run` no se descarguen.
+- **Variables:** declara con `local` todas las que use la función. Una global solo se justifica si otro paso la necesita después, como `DOCKER_GROUP_ADDED`, que lee `print_manual_steps`.
+- **Instaladores con `curl … | bash`:** ponlos entre comillas dentro de `run bash -o pipefail -c '…'`. Las comillas hacen que con `--dry-run` no se descarguen. `-o pipefail` hace que el paso falle si falla la descarga: sin él, bash recibe un script vacío y termina bien.
 - **Instaladores que escriben en `.zshrc`:** muchos lo hacen (nvm, por ejemplo). Como `.zshrc` es un archivo del repo, busca en su documentación cómo evitarlo, como el `PROFILE=/dev/null` de nvm. Si alguno se cuela igual, al terminar el script avisa que hay archivos del repo modificados.
-- **Pasos que dependen del sistema:** usa `[[ $OS == Darwin ]]` o `[[ $KDE == yes ]]`.
+- **Pasos que dependen del sistema:** la condición va en `main`, alrededor de la llamada, con `[[ $OS == Darwin ]]`, `[[ $KDE == yes ]]` o `is_gnome`. Si solo cambia una parte del paso, la condición puede ir dentro de la función, como en `install_font`.
+- **Salir antes:** usa `return`, no `exit`. Y no termines una función con `[[ … ]] && algo`: si la condición es falsa, la función devuelve 1 y, con `set -e`, el script se detiene.
 
 ### Probar los cambios
 
