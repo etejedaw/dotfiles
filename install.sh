@@ -15,8 +15,9 @@ PACKAGES="$DOTFILES/packages"
 BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
 NVM_VERSION="v0.40.8"
 LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install.log"
+readonly DOTFILES PACKAGES BACKUP_DIR NVM_VERSION LOG
 
-# Los define main al empezar
+# Los define main al empezar y desde ahí no cambian
 DRY_RUN=no
 OS=
 KDE=no
@@ -581,9 +582,11 @@ EOF
 
 main() {
   parse_args "$@"
+  readonly DRY_RUN
   trap on_exit EXIT
   start_log "$@"
   detect_system
+  readonly OS KDE
   step "Sistema: $OS · KDE: $KDE · dry-run: $DRY_RUN"
   local repo_status_before
   repo_status_before=$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)

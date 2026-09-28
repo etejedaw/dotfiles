@@ -18,6 +18,7 @@ set -euo pipefail
 
 BIN="$HOME/.local/bin"
 LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/custom-packages.log"
+readonly BIN LOG
 if [[ $(uname) == Darwin ]]; then
   PKGS=(marktext)
 else
@@ -88,7 +89,7 @@ case "$(uname -m)" in
   arm64) marktext_asset='mac-arm64-.*\.zip$' ;;
   *) marktext_asset='mac-x64-.*\.zip$' ;;
 esac
-MARKTEXT_APP=/Applications/marktext.app
+readonly MARKTEXT_APP=/Applications/marktext.app
 marktext_version() { [[ -d $MARKTEXT_APP ]] && { plutil -extract CFBundleShortVersionString raw "$MARKTEXT_APP/Contents/Info.plist" 2>/dev/null || echo '?'; } || true; }
 # Se descomprime aparte y reemplaza la app entera, para no mezclar archivos de dos versiones
 marktext_install() {
