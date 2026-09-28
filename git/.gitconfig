@@ -14,7 +14,6 @@
 [http]
 	lowSpeedLimit = 1000
 	lowSpeedTime = 60
-	postBuffer = 524288000
 
 [credential "https://github.com"]
 	helper = 
