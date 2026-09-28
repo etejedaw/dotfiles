@@ -14,7 +14,13 @@ BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
 NVM_VERSION="v0.40.8"
 LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install.log"
 DRY_RUN=no
-[[ "${1:-}" == "--dry-run" || "${1:-}" == "-n" ]] && DRY_RUN=yes
+# Una opción desconocida detiene todo: con un --dry-run mal escrito se haría la instalación real
+for arg; do
+  case "$arg" in
+    -n|--dry-run) DRY_RUN=yes ;;
+    *) echo "Opción desconocida: $arg (uso: ./install.sh [--dry-run])" >&2; exit 1 ;;
+  esac
+done
 
 # --- Utilidades ---
 
