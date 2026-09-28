@@ -9,7 +9,7 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | Paquete | Qué configura |
 |---|---|
 | `zsh` | zsh con Oh My Zsh, Powerlevel10k, nvm y alias |
-| `git` | `.gitconfig` (usa `gh` para las credenciales de GitHub) |
+| `git` | `.gitconfig` (usa `gh` para las credenciales de GitHub) y los archivos que git ignora en todos los repos |
 | `ssh` | `~/.ssh/config` con los alias de mis servidores, **sin IPs ni llaves** |
 | `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) y el hook que lo convierte en orquestador dentro de herdr |
 | `herdr` | `config.toml` de herdr, el multiplexor de agentes |
@@ -40,7 +40,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ```
 .dotfiles/
 ├── zsh/            .zshrc, .p10k.zsh y .config/zsh/{aliases,linux,mac}.zsh
-├── git/            .gitconfig
+├── git/            .gitconfig y .config/git/ignore
 ├── ssh/            .ssh/config
 ├── claude/         .claude/rules/markdown.md y .claude/hooks/herdr-orchestrator.{sh,md}
 ├── herdr/          .config/herdr/config.toml
@@ -161,6 +161,8 @@ git config --file ~/.gitconfig.local push.useForceIfIncludes true
 Los repos nuevos (`git init`) empiezan en la rama `main` (`init.defaultBranch`), igual que en GitHub.
 
 El primer `git push` de una rama nueva la crea en el remoto y la deja enlazada (`push.autoSetupRemote`), sin tener que escribir `git push -u origin <rama>`.
+
+`git/.config/git/ignore` lista lo que no debe entrar a ningún repo: los `.DS_Store` del Mac, los `.directory` de Dolphin y los temporales de los editores. Git lee `~/.config/git/ignore` sin configurar nada, así que no hace falta `core.excludesfile`, y los proyectos no tienen que repetirlo en su `.gitignore`.
 
 Ese ejemplo es el que uso en el equipo donde hago rebase. Con `git-auto-fetch`, las referencias remotas se actualizan solas, y `git push --force-with-lease` puede pisar commits ajenos que nunca viste. `push.useForceIfIncludes` hace que además exija que esos commits estén integrados en tu rama.
 

@@ -1,0 +1,11 @@
+# Lo que no debe entrar a ningún repo. Git lo lee solo, sin core.excludesfile, porque está en ~/.config/git/ignore.
+
+# Archivos que crea el sistema
+.DS_Store
+._*
+.directory
+Thumbs.db
+
+# Archivos temporales de editores
+*.swp
+*~
