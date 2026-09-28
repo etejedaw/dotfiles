@@ -13,9 +13,11 @@ set -euo pipefail
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGES="$DOTFILES/packages"
 BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
-NVM_VERSION="v0.40.8"
+NVM_RELEASE="v0.40.8"
 LOG="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install.log"
-readonly DOTFILES PACKAGES BACKUP_DIR NVM_VERSION LOG
+# install_node hace source de nvm.sh, y un readonly global no se puede redeclarar con local: estos nombres no pueden
+# coincidir con variables de nvm (por eso NVM_RELEASE y no NVM_VERSION, que nvm.sh usa)
+readonly DOTFILES PACKAGES BACKUP_DIR NVM_RELEASE LOG
 
 # Los define main al empezar y desde ahí no cambian
 DRY_RUN=no
@@ -450,7 +452,7 @@ install_node() {
     info "nvm ya instalado"
   else
     # PROFILE=/dev/null: que no escriba en ~/.zshrc (lo carga el plugin nvm de Oh My Zsh)
-    run bash -o pipefail -c "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | PROFILE=/dev/null bash"
+    run bash -o pipefail -c "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_RELEASE/install.sh | PROFILE=/dev/null bash"
   fi
   if [[ $DRY_RUN == yes ]]; then
     info "[dry-run] nvm install --lts"

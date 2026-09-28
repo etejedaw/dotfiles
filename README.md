@@ -441,7 +441,7 @@ Supongamos que quieres versionar la configuración de `btop`, que vive en `~/.co
 
 El script va de arriba abajo en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Antes de la primera sección:
 
-- **Variables:** `DOTFILES` (la carpeta del repo), `NVM_VERSION`, `BACKUP_DIR`, `LOG`…
+- **Variables:** `DOTFILES` (la carpeta del repo), `NVM_RELEASE`, `BACKUP_DIR`, `LOG`…
 - **Log:** desde el principio, toda la salida va también a `LOG` (`~/.local/state/dotfiles/install.log`), y la trampa `ERR` anota el comando y la línea de cualquier error. `on_exit` corre al salir: detiene la renovación de sudo y, si hubo error, dice dónde está el log. Si un paso necesita hacer algo al salir, agrégalo a `on_exit`: otro `trap … EXIT` lo reemplazaría.
 - **Detección:** `OS` (`Darwin` o `Linux`) y `KDE` (`yes` o `no`).
 - **Funciones de ayuda:**
