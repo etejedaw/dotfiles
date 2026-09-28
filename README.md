@@ -137,7 +137,7 @@ Los paquetes de Stow que se enlazan en cada equipo. Un cambio en uno de ellos ll
 `.zshrc` es común a todos los sistemas y carga tres archivos de `~/.config/zsh/`:
 
 - `linux.zsh` o `mac.zsh`, según `uname`. Se cargan **antes** de Oh My Zsh, porque definen rutas que Oh My Zsh necesita al arrancar (los highlighters y el `FPATH` de Homebrew).
-- `aliases.zsh`, **después** de Oh My Zsh, para que mis alias (`ll`, `la`…) pisen los que trae.
+- `aliases.zsh`, **después** de Oh My Zsh, para que mis alias (`ll`, `la`…) pisen los que trae. `cat` es un alias de `bat`, con colores y números de línea; en un pipe o hacia un archivo, `bat` se comporta igual que `cat`. Para el `cat` de verdad: `command cat`.
 
 Al final se cargan, si existen, dos archivos que no están en el repo:
 
