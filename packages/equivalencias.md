@@ -18,6 +18,6 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 | Base de datos              | DbGate (brew)                   | DbGate (flatpak)                | DbGate (flatpak)                |
 | Contenedores               | Docker Desktop (brew)           | Docker Engine (dnf)             | Docker Engine (dnf)             |
 | Cliente FTP/SFTP           | ninguno (`sftp` en la terminal) | FileZilla (flatpak)             | FileZilla (flatpak)             |
-| Grabar imágenes en USB     | por definir                     | balenaEtcher (.rpm)             | balenaEtcher (.rpm)             |
+| Grabar imágenes en USB     | balenaEtcher (brew)             | balenaEtcher (.rpm)             | balenaEtcher (.rpm)             |
 | Apps gráficas              | `brew install --cask`           | `flatpak install flathub`       | `flatpak install flathub`       |
 | Paquetes CLI               | `brew install`                  | `dnf install`                   | `dnf install`                   |
