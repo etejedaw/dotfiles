@@ -55,8 +55,12 @@ sudo_once() {
 on_exit() {
   local code=$?
   if [[ -n $SUDO_KEEPALIVE_PID ]]; then kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true; fi
-  if (( code )); then warn "install.sh terminó con error (código $code). Log: ${LOG/#$HOME/\~}"; fi
+  if (( code )); then warn "install.sh terminó con error (código $code). Log: $(tilde "$LOG")"; fi
 }
+
+# ~ en lugar de /Users/esteban en los mensajes. No usa ${var/#$HOME/~} porque bash 5
+# expande esa tilde y bash 3.2 no: en un Mac nuevo el script corre con el 3.2 del sistema.
+tilde() { case $1 in "$HOME"/*) printf '~%s' "${1#"$HOME"}";; *) printf '%s' "$1";; esac; }
 
 # Lee una lista de packages/ sin comentarios ni líneas vacías
 list() { sed 's/#.*//' "$PACKAGES/$1" | xargs -n1; }
@@ -283,7 +287,7 @@ backup_conflicts() {
     target="$HOME/$rel"
     [[ -e $target || -L $target ]] || continue
     [[ "$(readlink -f "$target")" == "$(readlink -f "$DOTFILES/$pkg/$rel")" ]] && continue
-    info "respaldo: ~/$rel → ${BACKUP_DIR/#$HOME/\~}/$rel"
+    info "respaldo: ~/$rel → $(tilde "$BACKUP_DIR")/$rel"
     CONFLICTS=$((CONFLICTS + 1))
     run mkdir -p "$(dirname "$BACKUP_DIR/$rel")"
     run mv "$target" "$BACKUP_DIR/$rel"
@@ -600,10 +604,10 @@ EOF
     echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
   fi
   if [[ -d $BACKUP_DIR ]]; then
-    echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/\~}"
+    echo "    - Revisar los archivos respaldados en $(tilde "$BACKUP_DIR")"
   fi
   if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$repo_status_before" ]]; then
-    warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/\~} diff'"
+    warn "Algún instalador modificó archivos del repo: revisa 'git -C $(tilde "$DOTFILES") diff'"
   fi
 }
 
