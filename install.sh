@@ -465,6 +465,7 @@ link_zsh_plugins() {
     dir="$HOME/.oh-my-zsh/custom/plugins/$plugin"
     run mkdir -p "$dir"
     run ln -sfn "$share/$plugin/$plugin.zsh" "$dir/$plugin.plugin.zsh"
+    info "$plugin → $share/$plugin"
   done
 }
 
@@ -538,6 +539,7 @@ register_herdr_hook() {
     [[ -f $claude_settings ]] || echo '{}' >"$claude_settings"
     merged="$(jq --arg c "$herdr_hook" '.hooks.SessionStart += [{hooks: [{type: "command", command: $c}]}]' "$claude_settings")"
     printf '%s\n' "$merged" >"$claude_settings"
+    info "registrado en $(tilde "$claude_settings")"
   fi
 }
 
