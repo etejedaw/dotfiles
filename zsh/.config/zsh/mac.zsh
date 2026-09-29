@@ -11,3 +11,6 @@ FPATH="$BREW_PREFIX/share/zsh/site-functions:${FPATH}"
 
 # zsh-syntax-highlighting instalado con brew
 export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=$BREW_PREFIX/share/zsh-syntax-highlighting/highlighters
+
+# Autocompletado del CLI de Docker Desktop (lo genera la app en ~/.docker/completions)
+[[ -d $HOME/.docker/completions ]] && FPATH="$HOME/.docker/completions:${FPATH}"
