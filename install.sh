@@ -589,12 +589,18 @@ set_default_shell() {
 print_manual_steps() {
   local repo_status_before=$1
   step "Listo. Pasos manuales pendientes:"
-  cat <<EOF
-    - gh auth login -p ssh   (navegador; ofrece subir ~/.ssh/id_ed25519.pub a GitHub: acepta)
-    - Llaves SSH de los servidores: copiarlas a ~/.ssh/, y crear ~/.ssh/config.d/hosts con los HostName
-    - Crear ~/.secrets (600) con los tokens y ~/.zshrc.local con lo de este equipo
-    - Abrir una terminal nueva para cargar zsh
-EOF
+  echo "    - gh auth login -p ssh   (navegador; ofrece subir ~/.ssh/id_ed25519.pub a GitHub: acepta)"
+  # Los tres archivos de abajo no están en el repo: solo se avisa de los que faltan en este equipo
+  if [[ ! -e $HOME/.ssh/config.d/hosts ]]; then
+    echo "    - IPs de los servidores: crear ~/.ssh/config.d/hosts (600) con los HostName"
+  fi
+  if [[ ! -f $HOME/.secrets ]]; then
+    echo "    - Secretos: crear ~/.secrets (600) con los tokens y contraseñas"
+  fi
+  if [[ ! -f $HOME/.zshrc.local ]]; then
+    echo "    - Cosas de un solo equipo: ~/.zshrc.local (alias y funciones) y ~/.gitconfig.local"
+  fi
+  echo "    - Abrir una terminal nueva para cargar zsh"
   if [[ $OS == Darwin ]]; then
     echo "    - p10k configure, si los íconos no se ven bien"
     echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
