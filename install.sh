@@ -114,8 +114,11 @@ start_log() {
   printf '== install.sh %s · %s · %s\n' "$*" "$(date '+%Y-%m-%d %H:%M:%S')" "$(uname -srm)" >"$LOG"
   exec > >(tee >(sed $'s/\e\\[[0-9;]*m//g' >>"$LOG")) 2>&1
   set -E
-  trap 'warn "falló en la línea $LINENO: $BASH_COMMAND"' ERR
+  arm_err_trap
 }
+
+# En una función, porque install_node la desarma para correr nvm y la vuelve a armar
+arm_err_trap() { trap 'warn "falló en la línea $LINENO: $BASH_COMMAND"' ERR; }
 
 detect_system() {
   OS="$(uname)"
@@ -478,11 +481,15 @@ install_node() {
     return
   fi
   set +u
+  # nvm.sh corre `which node`, que falla a propósito mientras no hay ningún Node instalado.
+  # Con la trampa armada se reportaría como error, y con el LINENO de nvm.sh: una línea que no existe en este archivo.
+  trap - ERR
   # shellcheck source=/dev/null
   . "$NVM_DIR/nvm.sh"
   nvm install --lts
   # Sin esto el default queda fijo en la primera versión instalada y no sigue a la LTS nueva
   nvm alias default 'lts/*'
+  arm_err_trap
   set -u
 }
 
