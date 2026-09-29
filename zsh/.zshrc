@@ -56,6 +56,10 @@ source $ZSH/custom/themes/powerlevel10k/powerlevel10k.zsh-theme
 # $PATH                — el resto del PATH existente va al final, con menor prioridad
 export PATH="./node_modules/.bin:$HOME/.local/bin:$PATH"
 
+# Editor de la terminal (git ya usa nano por core.editor en .gitconfig)
+export EDITOR=nano
+export VISUAL=nano
+
 # Aliases — despues de oh-my-zsh.sh, para pisar los que trae (ll, la, etc.)
 [[ -f $ZSH_CONFIG_DIR/aliases.zsh ]] && source $ZSH_CONFIG_DIR/aliases.zsh
 
