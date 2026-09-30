@@ -43,7 +43,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── zsh/            .zshrc, .p10k.zsh y .config/zsh/{aliases,linux,mac}.zsh
 ├── git/            .gitconfig y .config/git/ignore
 ├── ssh/            .ssh/config
-├── claude/         .claude/rules/markdown.md y .claude/hooks/herdr-orchestrator.{sh,md}
+├── claude/         .claude/rules/*.md y .claude/hooks/herdr-orchestrator.{sh,md}
 ├── herdr/          .config/herdr/config.toml
 ├── vscodium/       settings.json (una sola copia para Linux y Mac) + extensions
 ├── konsole/        perfil de Konsole
