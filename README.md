@@ -29,7 +29,8 @@ Además de los archivos de configuración, `install.sh` instala:
 - El comando [`custom-packages`](#custom-packages), que instala y actualiza desde su última release en GitHub los programas que no están en los gestores de paquetes. En Fedora, los que no están en dnf ni en Flathub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew), [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`), [Vicinae](https://github.com/vicinaehq/vicinae) (AppImage que instala su script oficial en `/usr/local`) y, solo en GNOME, la extensión de Vicinae. En Mac, [MarkText](https://github.com/marktext/marktext) (`.zip` que queda en `/Applications`), porque Homebrew desactivó su cask. `install.sh` instala los que falten con `custom-packages install -y`; las actualizaciones son a mano, con `custom-packages update`.
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La llave SSH para GitHub (`~/.ssh/id_ed25519`, sin passphrase), si no existe. Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales.
-- La fuente JetBrainsMono Nerd Font. En GNOME, además, la pone como fuente de Ptyxis (la terminal) y hace que las pestañas nuevas se abran en la carpeta de la actual.
+- La fuente JetBrainsMono Nerd Font.
+- En GNOME, la terminal [Ghostty](https://ghostty.org), del COPR comunitario `scottames/ghostty`: no está en los repos oficiales de Fedora ni en Flathub. En Mac viene de brew y en KDE la terminal sigue siendo Konsole.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS, con `lts/*` como versión por defecto: cuando sale una LTS nueva e instalas esa versión, pasa a ser la de por defecto.
 - herdr, con su propio instalador en Mac y en Fedora: queda en `~/.local/bin` y se actualiza con `herdr update`, no con `brew` ni `dnf`.
@@ -131,7 +132,7 @@ Los paquetes de Stow que se enlazan en cada equipo. Un cambio en uno de ellos ll
 | `zsh git ssh claude herdr vscodium custom-packages` | ✓ | ✓ | ✓ |
 | `vicinae` | ✓ | ✓ | |
 | `konsole` | ✓ | | |
-| `ghostty` | | | ✓ |
+| `ghostty` | | ✓ | ✓ |
 
 ### zsh
 
@@ -259,6 +260,8 @@ flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/fl
 flatpak install --user -y flathub $(sed 's/#.*//' packages/flatpak)
 # AFFiNE, git-flow-next, balenaEtcher, Vicinae y (en GNOME) la extensión de Vicinae: no están en dnf ni en Flathub, se bajan de GitHub
 ./custom-packages/.local/bin/custom-packages install
+# Solo GNOME: Ghostty, del COPR comunitario
+sudo dnf copr enable -y scottames/ghostty && sudo dnf install -y ghostty
 ```
 
 **Solo GNOME** (Vicinae: extensión, servicio y atajos; después, cerrar sesión y volver a entrar):
@@ -315,14 +318,12 @@ stow -t ~ --no-folding --ignore='Library' vscodium
 stow -t ~ --no-folding vicinae
 # Solo KDE
 stow -t ~ --no-folding konsole
-# Solo GNOME: fuente de Ptyxis y pestañas nuevas en la misma carpeta (vive en dconf, no en un archivo)
-gsettings set org.gnome.Ptyxis use-system-font false
-gsettings set org.gnome.Ptyxis font-name 'JetBrainsMono Nerd Font Mono 11'
-profile=$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")
-gsettings set "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$profile/" preserve-directory 'always'
+# Solo GNOME
+stow -t ~ --no-folding ghostty
 
 # Mac
 stow -t ~ --no-folding --ignore='\.var' vscodium
+stow -t ~ --no-folding ghostty
 ```
 
 ### 3. Fuente
@@ -442,7 +443,7 @@ Supongamos que quieres versionar la configuración de `btop`, que vive en `~/.co
 
 ### Cómo está organizado
 
-Cada paso es una función (`install_font`, `configure_ptyxis`, `install_node`…), agrupadas en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Al final, `main` las llama en orden: para saber qué hace el script y en qué orden, basta con leer `main`. De arriba abajo, el archivo tiene:
+Cada paso es una función (`install_font`, `install_ghostty_gnome`, `install_node`…), agrupadas en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Al final, `main` las llama en orden: para saber qué hace el script y en qué orden, basta con leer `main`. De arriba abajo, el archivo tiene:
 
 - **Constantes:** `DOTFILES` (la carpeta del repo), `PACKAGES`, `BACKUP_DIR`, `NVM_RELEASE` y `LOG`, todas `readonly`. Como `install_node` hace `source` de `nvm.sh` y un `readonly` global no se puede redeclarar con `local`, sus nombres no pueden coincidir con variables de nvm (por eso `NVM_RELEASE` y no `NVM_VERSION`).
 - **Funciones de ayuda** (tabla de abajo).

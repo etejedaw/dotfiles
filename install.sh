@@ -325,7 +325,7 @@ link_dotfiles() {
   else
     stow_pkg vscodium 'Library'
     stow_pkg vicinae
-    if [[ $KDE == yes ]]; then stow_pkg konsole; fi
+    if [[ $KDE == yes ]]; then stow_pkg konsole; else stow_pkg ghostty; fi
   fi
   run chmod 600 "$DOTFILES/ssh/.ssh/config"
 }
@@ -410,29 +410,15 @@ install_font() {
   fi
 }
 
-# Ptyxis guarda su configuración en dconf, no en archivos: se aplica con gsettings. Usa la misma fuente que Konsole
-# y abre las pestañas y ventanas nuevas en la carpeta de la actual.
-configure_ptyxis() {
-  step "Ptyxis (terminal de GNOME)"
-  if ! gsettings list-keys org.gnome.Ptyxis >/dev/null 2>&1; then
-    warn "Ptyxis no está instalado: se omite su configuración"
+install_ghostty_gnome() {
+  step "Ghostty (terminal de GNOME)"
+  if rpm -q ghostty >/dev/null 2>&1; then
+    info "ya instalado"
     return
   fi
-  if [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
-    warn "sin sesión gráfica (¿SSH?): la configuración de Ptyxis se aplicará al ejecutar install.sh desde el escritorio"
-    return
-  fi
-  gsettings_set org.gnome.Ptyxis use-system-font false
-  gsettings_set org.gnome.Ptyxis font-name "'JetBrainsMono Nerd Font Mono 11'"
-  # Si Ptyxis nunca se abrió no hay perfil todavía: se crea uno y queda como predeterminado
-  local profile
-  profile=$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")
-  if [[ -z $profile ]]; then
-    profile=$(tr -d - </proc/sys/kernel/random/uuid)
-    run gsettings set org.gnome.Ptyxis profile-uuids "['$profile']"
-    run gsettings set org.gnome.Ptyxis default-profile-uuid "'$profile'"
-  fi
-  gsettings_set "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$profile/" preserve-directory "'always'"
+  sudo_once
+  run sudo dnf copr enable -y scottames/ghostty
+  run sudo dnf install -y ghostty
 }
 
 # --- 4. Oh My Zsh, Powerlevel10k y plugins ---
@@ -642,7 +628,7 @@ main() {
   create_ssh_key
 
   install_font
-  if is_gnome; then configure_ptyxis; fi
+  if is_gnome; then install_ghostty_gnome; fi
 
   install_oh_my_zsh
   install_powerlevel10k
