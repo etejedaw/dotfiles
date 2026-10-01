@@ -321,7 +321,7 @@ link_dotfiles() {
   for pkg in zsh git ssh claude herdr custom-packages; do stow_pkg "$pkg"; done
   if [[ $OS == Darwin ]]; then
     stow_pkg vscodium '\.var'
-    stow_pkg hyper
+    stow_pkg ghostty
   else
     stow_pkg vscodium 'Library'
     stow_pkg vicinae

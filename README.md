@@ -16,7 +16,7 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `vscodium` | `settings.json` de VSCodium y la lista de extensiones |
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) |
 | `vicinae` | Configuración del lanzador Vicinae y, en KDE, atajo a su historial del portapapeles |
-| `hyper` | Terminal Hyper (JetBrainsMono Nerd Font) |
+| `ghostty` | Terminal Ghostty (JetBrainsMono Nerd Font) |
 
 Para ver en qué equipo va cada paquete, mira [Qué se sincroniza con Stow entre los equipos](#qué-se-sincroniza-con-stow-entre-los-equipos).
 
@@ -48,7 +48,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── vscodium/       settings.json (una sola copia para Linux y Mac) + extensions
 ├── konsole/        perfil de Konsole
 ├── vicinae/        settings.json de Vicinae y atajo Meta+Shift+V al historial del portapapeles (el atajo, solo KDE)
-├── hyper/          .hyper.js
+├── ghostty/        .config/ghostty/config.ghostty
 ├── custom-packages/ comando que instala y actualiza los programas de GitHub
 ├── packages/       listas de lo que se instala en cada sistema
 ├── install.sh      instala y enlaza todo
@@ -131,7 +131,7 @@ Los paquetes de Stow que se enlazan en cada equipo. Un cambio en uno de ellos ll
 | `zsh git ssh claude herdr vscodium custom-packages` | ✓ | ✓ | ✓ |
 | `vicinae` | ✓ | ✓ | |
 | `konsole` | ✓ | | |
-| `hyper` | | | ✓ |
+| `ghostty` | | | ✓ |
 
 ### zsh
 
