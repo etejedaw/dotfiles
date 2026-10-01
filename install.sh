@@ -248,8 +248,8 @@ install_fedora_packages() {
   fi
 }
 
-# custom-packages baja de GitHub lo que no está en dnf ni en Flathub (en Fedora: AFFiNE, git-flow-next, balenaEtcher,
-# Vicinae y su extensión para GNOME) o que Homebrew no deja instalar (en Mac: MarkText).
+# custom-packages baja de GitHub lo que no está en dnf ni en Flathub (en Fedora: AFFiNE, git-flow-next, lazygit,
+# lazydocker, balenaEtcher, Vicinae y su extensión para GNOME) o que Homebrew no deja instalar (en Mac: MarkText).
 # Solo instala los que faltan; las actualizaciones son a mano, con `custom-packages update`.
 # Si falla (GitHub caído, por ejemplo), se avisa y el resto de la instalación sigue.
 install_custom_packages() {

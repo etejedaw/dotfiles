@@ -16,6 +16,8 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 | Navegador                  | Brave (brew)                    | Brave (flatpak)                 | Brave (flatpak)                 |
 | Cliente API                | Bruno (brew)                    | Bruno (flatpak)                 | Bruno (flatpak)                 |
 | Base de datos              | DbGate (brew)                   | DbGate (flatpak)                | DbGate (flatpak)                |
+| Git en la terminal         | lazygit (brew)                  | lazygit (custom-packages)       | lazygit (custom-packages)       |
+| Docker en la terminal      | lazydocker (brew)               | lazydocker (custom-packages)    | lazydocker (custom-packages)    |
 | Contenedores               | Docker Desktop (brew)           | Docker Engine (dnf)             | Docker Engine (dnf)             |
 | Cliente FTP/SFTP           | ninguno (`sftp` en la terminal) | FileZilla (flatpak)             | FileZilla (flatpak)             |
 | Grabar imágenes en USB     | balenaEtcher (brew)             | balenaEtcher (.rpm)             | balenaEtcher (.rpm)             |
