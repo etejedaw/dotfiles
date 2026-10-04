@@ -2,7 +2,7 @@
 alias ls='eza --icons --group-directories-first'
 alias ll='eza --icons --group-directories-first -l --git'
 alias la='eza --icons --group-directories-first -la --git'
-alias lt='eza --icons --tree --level=2'
+alias tree='eza --icons --tree --level=2'
 
 # bat: cat con colores y números de línea. Si la salida va a un pipe o a un archivo, se comporta igual que cat.
 alias cat='bat --paging=never'
