@@ -11,7 +11,7 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `zsh` | zsh con Oh My Zsh, Powerlevel10k, nvm y alias |
 | `git` | `.gitconfig` (usa `gh` para las credenciales de GitHub) y los archivos que git ignora en todos los repos |
 | `ssh` | `~/.ssh/config` con los alias de mis servidores, **sin IPs ni llaves** |
-| `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) y el hook que lo convierte en orquestador dentro de herdr |
+| `claude` | Reglas globales de Claude Code (`~/.claude/rules/`), el comando `/worktree` (`~/.claude/commands/`) y el hook que lo convierte en orquestador dentro de herdr |
 | `herdr` | `config.toml` de herdr, el multiplexor de agentes |
 | `vscodium` | `settings.json` de VSCodium y la lista de extensiones |
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) |
@@ -44,7 +44,7 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── zsh/            .zshrc, .p10k.zsh y .config/zsh/{aliases,linux,mac}.zsh
 ├── git/            .gitconfig y .config/git/ignore
 ├── ssh/            .ssh/config
-├── claude/         .claude/rules/*.md y .claude/hooks/herdr-orchestrator.{sh,md}
+├── claude/         .claude/rules/*.md, .claude/commands/worktree.md y .claude/hooks/herdr-orchestrator.{sh,md}
 ├── herdr/          .config/herdr/config.toml
 ├── vscodium/       settings.json (una sola copia para Linux y Mac) + extensions
 ├── konsole/        perfil de Konsole
