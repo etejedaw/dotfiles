@@ -37,7 +37,7 @@ Por cada worktree, abre un panel de herdr con su `--cwd` apuntando al worktree y
 
 ## 5. Commits e integración
 
-1. Tú no haces commits ni PRs en los worktrees. Cuando los bloques estén terminados, ejecuta `/commit` en cada instancia y espera a que confirme. Si la skill cmmit no existe, pregúntame antes por las reglas de commit
+1. Tú no haces commits ni PRs en los worktrees. Cuando los bloques estén terminados, ejecuta `/commit` en cada instancia y espera a que confirme. Si la skill `commit` no existe, pregúntame antes por las reglas de commit.
 2. Crea una rama de integración desde la rama base, con un nombre que describa la tarea completa.
 3. Integra en ella la rama de cada worktree, una a una, con **rebase merge**, sin commits de merge: no hace falta que el historial muestre de qué rama vino cada bloque. Por cada bloque, haz el rebase de su rama sobre la rama de integración desde su worktree (`git -C .worktree/<nombre> rebase <rama-integracion>`) y luego avanza la rama de integración en fast-forward (`git merge --ff-only <nombre>`). Tú resuelves los conflictos durante el rebase y las dependencias entre bloques (imports, tipos compartidos, rutas, paquetes, migraciones…), sin delegarlos en las instancias. Si en un conflicto no está claro qué versión conservar, pregúntame antes de decidir.
 4. Cierra los paneles de desarrollo cuando ya no los necesites.
