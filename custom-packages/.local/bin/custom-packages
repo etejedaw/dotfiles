@@ -96,7 +96,8 @@ vicinae_version() {
 vicinae_install() {
   local script
   script="$(dirname "$1")/vicinae-install.sh"
-  curl -fsSL https://vicinae.com/install -o "$script" && sudo bash "$script" --appimage "$1"
+  curl -fsSL https://vicinae.com/install -o "$script" && sudo bash "$script" --appimage "$1" \
+    && sudo chmod -R a+rX /usr/local/lib/vicinae
 }
 
 # Solo en GNOME. install.sh la activa; hace falta cerrar sesión y volver a entrar para que GNOME la cargue.
