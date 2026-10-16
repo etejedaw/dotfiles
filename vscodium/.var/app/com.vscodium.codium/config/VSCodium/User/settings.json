@@ -40,6 +40,11 @@
 	"explorer.confirmPasteNative": false,
 	"editor.fontFamily": "\"JetBrainsMono Nerd Font Mono\", \"JetBrainsMono NFM\", monospace",
 	"editor.fontLigatures": true,
+	"editor.unicodeHighlight.allowedLocales": {
+		"_os": true,
+		"_vscode": true,
+		"es": true
+	},
 	"terminal.integrated.fontFamily": "\"JetBrainsMono Nerd Font Mono\", \"JetBrainsMono NFM\", monospace",
 	"js/ts.tsdk.path": "node_modules/typescript/lib",
 	"js/ts.tsdk.promptToUseWorkspaceVersion": true,
