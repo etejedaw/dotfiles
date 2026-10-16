@@ -9,6 +9,8 @@ stow
 eza
 bat
 fzf
+ripgrep
+zoxide
 jq
 btop
 inxi

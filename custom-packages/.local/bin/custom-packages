@@ -18,7 +18,7 @@ readonly BIN LOG
 if [[ $(uname) == Darwin ]]; then
   PKGS=(marktext)
 else
-  PKGS=(affine gitflow etcher vicinae)  # en GNOME se agrega vicinaegnome, la extensión de Vicinae
+  PKGS=(affine gitflow lazygit lazydocker etcher vicinae)  # en GNOME se agrega vicinaegnome, la extensión de Vicinae
 fi
 
 # --- Programas ---
@@ -48,6 +48,30 @@ gitflow_version() {
   "$BIN/git-flow" version 2>/dev/null | awk '{print $1}' | grep . || echo '?'
 }
 gitflow_install() { mkdir -p "$BIN" && tar -xzf "$1" -C "$BIN" git-flow; }
+
+lazygit_name=lazygit
+lazygit_repo=jesseduffield/lazygit
+case "$(uname -m)" in
+  aarch64) lazygit_asset='linux_arm64\.tar\.gz$' ;;
+  *) lazygit_asset='linux_x86_64\.tar\.gz$' ;;
+esac
+lazygit_version() {
+  [[ -x $BIN/lazygit ]] || return 0
+  "$BIN/lazygit" --version 2>/dev/null | sed -n 's/.*, version=\([^,]*\),.*/\1/p' | grep . || echo '?'
+}
+lazygit_install() { mkdir -p "$BIN" && tar -xzf "$1" -C "$BIN" lazygit; }
+
+lazydocker_name=lazydocker
+lazydocker_repo=jesseduffield/lazydocker
+case "$(uname -m)" in
+  aarch64) lazydocker_asset='Linux_arm64\.tar\.gz$' ;;
+  *) lazydocker_asset='Linux_x86_64\.tar\.gz$' ;;
+esac
+lazydocker_version() {
+  [[ -x $BIN/lazydocker ]] || return 0
+  "$BIN/lazydocker" --version 2>/dev/null | awk '/^Version:/ {print $2}' | grep . || echo '?'
+}
+lazydocker_install() { mkdir -p "$BIN" && tar -xzf "$1" -C "$BIN" lazydocker; }
 
 etcher_name=balenaEtcher
 etcher_repo=balena-io/etcher

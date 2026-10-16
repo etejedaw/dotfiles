@@ -2,8 +2,11 @@
 
 gittower/tap/git-flow-next
 bash
+fd
+lazygit
+lazydocker
 
-hyper
+ghostty
 raycast
 vscodium
 brave-browser
@@ -14,6 +17,7 @@ docker-desktop
 affine
 discord
 telegram
+whatsapp
 tidal
 steam
 onlyoffice
@@ -22,4 +26,5 @@ drawio
 jdownloader
 vlc
 retroarch-metal
+balenaetcher
 chattymin/tap/poke-token-bar

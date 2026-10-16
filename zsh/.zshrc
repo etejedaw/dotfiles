@@ -24,6 +24,7 @@ plugins=(
   gh
   jsontools
   fzf
+  zoxide
   herdr
   zsh-autosuggestions
   zsh-syntax-highlighting  # siempre al final
@@ -36,6 +37,11 @@ zstyle ':omz:plugins:nvm' silent-autoload yes
 
 # git-auto-fetch — fetch en segundo plano al mostrar el prompt, como mucho cada 120s por repo
 GIT_AUTO_FETCH_INTERVAL=120
+
+export FZF_CTRL_T_COMMAND='fd --type f --hidden --exclude .git'
+export FZF_CTRL_T_OPTS="--preview 'bat --color=always --style=numbers --line-range=:200 {}'"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
+export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --icons --color=always {}'"
 
 # Config por sistema — antes de oh-my-zsh.sh, porque define
 # ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR y FPATH (compinit corre dentro de oh-my-zsh)
@@ -55,6 +61,10 @@ source $ZSH/custom/themes/powerlevel10k/powerlevel10k.zsh-theme
 # $HOME/.local/bin     — binarios instalados por el usuario (pipx, scripts propios, etc.)
 # $PATH                — el resto del PATH existente va al final, con menor prioridad
 export PATH="./node_modules/.bin:$HOME/.local/bin:$PATH"
+
+# Editor de la terminal (git ya usa nano por core.editor en .gitconfig)
+export EDITOR=nano
+export VISUAL=nano
 
 # Aliases — despues de oh-my-zsh.sh, para pisar los que trae (ll, la, etc.)
 [[ -f $ZSH_CONFIG_DIR/aliases.zsh ]] && source $ZSH_CONFIG_DIR/aliases.zsh

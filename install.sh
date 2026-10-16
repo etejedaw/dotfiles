@@ -55,8 +55,12 @@ sudo_once() {
 on_exit() {
   local code=$?
   if [[ -n $SUDO_KEEPALIVE_PID ]]; then kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true; fi
-  if (( code )); then warn "install.sh terminó con error (código $code). Log: ${LOG/#$HOME/\~}"; fi
+  if (( code )); then warn "install.sh terminó con error (código $code). Log: $(tilde "$LOG")"; fi
 }
+
+# ~ en lugar de /Users/esteban en los mensajes. No usa ${var/#$HOME/~} porque bash 5
+# expande esa tilde y bash 3.2 no: en un Mac nuevo el script corre con el 3.2 del sistema.
+tilde() { case $1 in "$HOME"/*) printf '~%s' "${1#"$HOME"}";; *) printf '%s' "$1";; esac; }
 
 # Lee una lista de packages/ sin comentarios ni líneas vacías
 list() { sed 's/#.*//' "$PACKAGES/$1" | xargs -n1; }
@@ -114,8 +118,11 @@ start_log() {
   printf '== install.sh %s · %s · %s\n' "$*" "$(date '+%Y-%m-%d %H:%M:%S')" "$(uname -srm)" >"$LOG"
   exec > >(tee >(sed $'s/\e\\[[0-9;]*m//g' >>"$LOG")) 2>&1
   set -E
-  trap 'warn "falló en la línea $LINENO: $BASH_COMMAND"' ERR
+  arm_err_trap
 }
+
+# En una función, porque install_node la desarma para correr nvm y la vuelve a armar
+arm_err_trap() { trap 'warn "falló en la línea $LINENO: $BASH_COMMAND"' ERR; }
 
 detect_system() {
   OS="$(uname)"
@@ -241,8 +248,8 @@ install_fedora_packages() {
   fi
 }
 
-# custom-packages baja de GitHub lo que no está en dnf ni en Flathub (en Fedora: AFFiNE, git-flow-next, balenaEtcher,
-# Vicinae y su extensión para GNOME) o que Homebrew no deja instalar (en Mac: MarkText).
+# custom-packages baja de GitHub lo que no está en dnf ni en Flathub (en Fedora: AFFiNE, git-flow-next, lazygit,
+# lazydocker, balenaEtcher, Vicinae y su extensión para GNOME) o que Homebrew no deja instalar (en Mac: MarkText).
 # Solo instala los que faltan; las actualizaciones son a mano, con `custom-packages update`.
 # Si falla (GitHub caído, por ejemplo), se avisa y el resto de la instalación sigue.
 install_custom_packages() {
@@ -280,7 +287,7 @@ backup_conflicts() {
     target="$HOME/$rel"
     [[ -e $target || -L $target ]] || continue
     [[ "$(readlink -f "$target")" == "$(readlink -f "$DOTFILES/$pkg/$rel")" ]] && continue
-    info "respaldo: ~/$rel → ${BACKUP_DIR/#$HOME/\~}/$rel"
+    info "respaldo: ~/$rel → $(tilde "$BACKUP_DIR")/$rel"
     CONFLICTS=$((CONFLICTS + 1))
     run mkdir -p "$(dirname "$BACKUP_DIR/$rel")"
     run mv "$target" "$BACKUP_DIR/$rel"
@@ -314,11 +321,11 @@ link_dotfiles() {
   for pkg in zsh git ssh claude herdr custom-packages; do stow_pkg "$pkg"; done
   if [[ $OS == Darwin ]]; then
     stow_pkg vscodium '\.var'
-    stow_pkg hyper
+    stow_pkg ghostty
   else
     stow_pkg vscodium 'Library'
     stow_pkg vicinae
-    if [[ $KDE == yes ]]; then stow_pkg konsole; fi
+    if [[ $KDE == yes ]]; then stow_pkg konsole; else stow_pkg ghostty; fi
   fi
   run chmod 600 "$DOTFILES/ssh/.ssh/config"
 }
@@ -403,29 +410,15 @@ install_font() {
   fi
 }
 
-# Ptyxis guarda su configuración en dconf, no en archivos: se aplica con gsettings. Usa la misma fuente que Konsole
-# y abre las pestañas y ventanas nuevas en la carpeta de la actual.
-configure_ptyxis() {
-  step "Ptyxis (terminal de GNOME)"
-  if ! gsettings list-keys org.gnome.Ptyxis >/dev/null 2>&1; then
-    warn "Ptyxis no está instalado: se omite su configuración"
+install_ghostty_gnome() {
+  step "Ghostty (terminal de GNOME)"
+  if rpm -q ghostty >/dev/null 2>&1; then
+    info "ya instalado"
     return
   fi
-  if [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
-    warn "sin sesión gráfica (¿SSH?): la configuración de Ptyxis se aplicará al ejecutar install.sh desde el escritorio"
-    return
-  fi
-  gsettings_set org.gnome.Ptyxis use-system-font false
-  gsettings_set org.gnome.Ptyxis font-name "'JetBrainsMono Nerd Font Mono 11'"
-  # Si Ptyxis nunca se abrió no hay perfil todavía: se crea uno y queda como predeterminado
-  local profile
-  profile=$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")
-  if [[ -z $profile ]]; then
-    profile=$(tr -d - </proc/sys/kernel/random/uuid)
-    run gsettings set org.gnome.Ptyxis profile-uuids "['$profile']"
-    run gsettings set org.gnome.Ptyxis default-profile-uuid "'$profile'"
-  fi
-  gsettings_set "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$profile/" preserve-directory "'always'"
+  sudo_once
+  run sudo dnf copr enable -y scottames/ghostty
+  run sudo dnf install -y ghostty
 }
 
 # --- 4. Oh My Zsh, Powerlevel10k y plugins ---
@@ -458,6 +451,7 @@ link_zsh_plugins() {
     dir="$HOME/.oh-my-zsh/custom/plugins/$plugin"
     run mkdir -p "$dir"
     run ln -sfn "$share/$plugin/$plugin.zsh" "$dir/$plugin.plugin.zsh"
+    info "$plugin → $share/$plugin"
   done
 }
 
@@ -478,11 +472,15 @@ install_node() {
     return
   fi
   set +u
+  # nvm.sh corre `which node`, que falla a propósito mientras no hay ningún Node instalado.
+  # Con la trampa armada se reportaría como error, y con el LINENO de nvm.sh: una línea que no existe en este archivo.
+  trap - ERR
   # shellcheck source=/dev/null
   . "$NVM_DIR/nvm.sh"
   nvm install --lts
   # Sin esto el default queda fijo en la primera versión instalada y no sigue a la LTS nueva
   nvm alias default 'lts/*'
+  arm_err_trap
   set -u
 }
 
@@ -527,6 +525,7 @@ register_herdr_hook() {
     [[ -f $claude_settings ]] || echo '{}' >"$claude_settings"
     merged="$(jq --arg c "$herdr_hook" '.hooks.SessionStart += [{hooks: [{type: "command", command: $c}]}]' "$claude_settings")"
     printf '%s\n' "$merged" >"$claude_settings"
+    info "registrado en $(tilde "$claude_settings")"
   fi
 }
 
@@ -576,12 +575,18 @@ set_default_shell() {
 print_manual_steps() {
   local repo_status_before=$1
   step "Listo. Pasos manuales pendientes:"
-  cat <<EOF
-    - gh auth login -p ssh   (navegador; ofrece subir ~/.ssh/id_ed25519.pub a GitHub: acepta)
-    - Llaves SSH de los servidores: copiarlas a ~/.ssh/, y crear ~/.ssh/config.d/hosts con los HostName
-    - Crear ~/.secrets (600) con los tokens y ~/.zshrc.local con lo de este equipo
-    - Abrir una terminal nueva para cargar zsh
-EOF
+  echo "    - gh auth login -p ssh   (navegador; ofrece subir ~/.ssh/id_ed25519.pub a GitHub: acepta)"
+  # Los tres archivos de abajo no están en el repo: solo se avisa de los que faltan en este equipo
+  if [[ ! -e $HOME/.ssh/config.d/hosts ]]; then
+    echo "    - IPs de los servidores: crear ~/.ssh/config.d/hosts (600) con los HostName"
+  fi
+  if [[ ! -f $HOME/.secrets ]]; then
+    echo "    - Secretos: crear ~/.secrets (600) con los tokens y contraseñas"
+  fi
+  if [[ ! -f $HOME/.zshrc.local ]]; then
+    echo "    - Cosas de un solo equipo: ~/.zshrc.local (alias y funciones) y ~/.gitconfig.local"
+  fi
+  echo "    - Abrir una terminal nueva para cargar zsh"
   if [[ $OS == Darwin ]]; then
     echo "    - p10k configure, si los íconos no se ven bien"
     echo "    - Docker: abrir Docker Desktop una vez para aceptar la licencia"
@@ -593,10 +598,10 @@ EOF
     echo "    - Docker: cerrar sesión y volver a entrar para usar docker sin sudo"
   fi
   if [[ -d $BACKUP_DIR ]]; then
-    echo "    - Revisar los archivos respaldados en ${BACKUP_DIR/#$HOME/\~}"
+    echo "    - Revisar los archivos respaldados en $(tilde "$BACKUP_DIR")"
   fi
   if [[ "$(git -C "$DOTFILES" status --porcelain 2>/dev/null || true)" != "$repo_status_before" ]]; then
-    warn "Algún instalador modificó archivos del repo: revisa 'git -C ${DOTFILES/#$HOME/\~} diff'"
+    warn "Algún instalador modificó archivos del repo: revisa 'git -C $(tilde "$DOTFILES") diff'"
   fi
 }
 
@@ -623,7 +628,7 @@ main() {
   create_ssh_key
 
   install_font
-  if is_gnome; then configure_ptyxis; fi
+  if is_gnome; then install_ghostty_gnome; fi
 
   install_oh_my_zsh
   install_powerlevel10k

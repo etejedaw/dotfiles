@@ -1,5 +1,7 @@
 # Paquetes solo para Fedora (dnf), además de `common`.
 
+fd-find
+
 docker-ce
 docker-ce-cli
 containerd.io

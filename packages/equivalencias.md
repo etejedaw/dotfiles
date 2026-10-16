@@ -4,7 +4,7 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 
 | Función                    | Mac                             | Fedora KDE                      | Fedora GNOME                    |
 | -------------------------- | ------------------------------- | ------------------------------- | ------------------------------- |
-| Terminal                   | Hyper                           | Konsole                         | Ptyxis                          |
+| Terminal                   | Ghostty                         | Konsole                         | Ghostty (COPR)                  |
 | Shell                      | zsh + Oh My Zsh + Powerlevel10k | zsh + Oh My Zsh + Powerlevel10k | zsh + Oh My Zsh + Powerlevel10k |
 | Lanzador                   | Raycast                         | Vicinae                         | Vicinae                         |
 | Ordenar ventanas           | Raycast                         | tiling de KWin                  | por definir                     |
@@ -16,8 +16,13 @@ Qué programa cumple cada función en cada equipo. Si instalas algo nuevo, agré
 | Navegador                  | Brave (brew)                    | Brave (flatpak)                 | Brave (flatpak)                 |
 | Cliente API                | Bruno (brew)                    | Bruno (flatpak)                 | Bruno (flatpak)                 |
 | Base de datos              | DbGate (brew)                   | DbGate (flatpak)                | DbGate (flatpak)                |
+| Git en la terminal         | lazygit (brew)                  | lazygit (custom-packages)       | lazygit (custom-packages)       |
+| Docker en la terminal      | lazydocker (brew)               | lazydocker (custom-packages)    | lazydocker (custom-packages)    |
+| Buscar texto en archivos   | ripgrep (`rg`)                  | ripgrep (`rg`)                  | ripgrep (`rg`)                  |
+| Buscar archivos            | fd (brew)                       | fd-find (dnf)                   | fd-find (dnf)                   |
+| Saltar entre carpetas      | zoxide (`z`, `zi`)              | zoxide (`z`, `zi`)              | zoxide (`z`, `zi`)              |
 | Contenedores               | Docker Desktop (brew)           | Docker Engine (dnf)             | Docker Engine (dnf)             |
 | Cliente FTP/SFTP           | ninguno (`sftp` en la terminal) | FileZilla (flatpak)             | FileZilla (flatpak)             |
-| Grabar imágenes en USB     | por definir                     | balenaEtcher (.rpm)             | balenaEtcher (.rpm)             |
+| Grabar imágenes en USB     | balenaEtcher (brew)             | balenaEtcher (.rpm)             | balenaEtcher (.rpm)             |
 | Apps gráficas              | `brew install --cask`           | `flatpak install flathub`       | `flatpak install flathub`       |
 | Paquetes CLI               | `brew install`                  | `dnf install`                   | `dnf install`                   |

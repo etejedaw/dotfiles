@@ -11,12 +11,12 @@ Si llegaste aquí buscando ideas para tus propios dotfiles, siéntete libre de c
 | `zsh` | zsh con Oh My Zsh, Powerlevel10k, nvm y alias |
 | `git` | `.gitconfig` (usa `gh` para las credenciales de GitHub) y los archivos que git ignora en todos los repos |
 | `ssh` | `~/.ssh/config` con los alias de mis servidores, **sin IPs ni llaves** |
-| `claude` | Reglas globales de Claude Code (`~/.claude/rules/`) y el hook que lo convierte en orquestador dentro de herdr |
+| `claude` | Reglas globales de Claude Code (`~/.claude/rules/`), el comando `/worktree` (`~/.claude/commands/`) y el hook que lo convierte en orquestador dentro de herdr |
 | `herdr` | `config.toml` de herdr, el multiplexor de agentes |
 | `vscodium` | `settings.json` de VSCodium y la lista de extensiones |
 | `konsole` | Perfil de Konsole (zsh + JetBrainsMono Nerd Font) |
 | `vicinae` | Configuración del lanzador Vicinae y, en KDE, atajo a su historial del portapapeles |
-| `hyper` | Terminal Hyper (JetBrainsMono Nerd Font) |
+| `ghostty` | Terminal Ghostty (JetBrainsMono Nerd Font) |
 
 Para ver en qué equipo va cada paquete, mira [Qué se sincroniza con Stow entre los equipos](#qué-se-sincroniza-con-stow-entre-los-equipos).
 
@@ -26,10 +26,11 @@ Además de los archivos de configuración, `install.sh` instala:
 - En Mac, las actualizaciones automáticas de Homebrew ([homebrew-autoupdate](https://github.com/DomT4/homebrew-autoupdate)): cada 12 horas y al iniciar sesión actualiza fórmulas y casks y limpia las versiones viejas.
 - En GNOME, la configuración del lanzador [Vicinae](https://vicinae.com) (lo instala `custom-packages`): lo arranca con la sesión (servicio de systemd), activa su [extensión de GNOME](https://github.com/vicinaehq/gnome-extension) y crea los mismos atajos que en KDE: Super+Espacio abre Vicinae y Super+Shift+V su historial del portapapeles. Para eso le quita Super+Espacio al cambio de idioma del teclado.
 - En GNOME, la extensión [AppIndicator](https://github.com/ubuntu/gnome-shell-extension-appindicator) (de dnf, activada con `gsettings`), para que se vean los íconos en la bandeja, como el de Nextcloud. KDE los muestra sin nada extra.
-- El comando [`custom-packages`](#custom-packages), que instala y actualiza desde su última release en GitHub los programas que no están en los gestores de paquetes. En Fedora, los que no están en dnf ni en Flathub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next) (binario en `~/.local/bin`; en Mac viene de brew), [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`), [Vicinae](https://github.com/vicinaehq/vicinae) (AppImage que instala su script oficial en `/usr/local`) y, solo en GNOME, la extensión de Vicinae. En Mac, [MarkText](https://github.com/marktext/marktext) (`.zip` que queda en `/Applications`), porque Homebrew desactivó su cask. `install.sh` instala los que falten con `custom-packages install -y`; las actualizaciones son a mano, con `custom-packages update`.
+- El comando [`custom-packages`](#custom-packages), que instala y actualiza desde su última release en GitHub los programas que no están en los gestores de paquetes. En Fedora, los que no están en dnf ni en Flathub: AFFiNE (`.flatpak`; en Mac viene de brew), [git-flow-next](https://github.com/gittower/git-flow-next), [lazygit](https://github.com/jesseduffield/lazygit) y [lazydocker](https://github.com/jesseduffield/lazydocker) (binarios en `~/.local/bin`; en Mac vienen de brew), [balenaEtcher](https://github.com/balena-io/etcher) (`.rpm`), [Vicinae](https://github.com/vicinaehq/vicinae) (AppImage que instala su script oficial en `/usr/local`) y, solo en GNOME, la extensión de Vicinae. En Mac, [MarkText](https://github.com/marktext/marktext) (`.zip` que queda en `/Applications`), porque Homebrew desactivó su cask. `install.sh` instala los que falten con `custom-packages install -y`; las actualizaciones son a mano, con `custom-packages update`.
 - En Fedora, activa el servicio de Docker y agrega tu usuario al grupo `docker`, para usarlo sin `sudo` (después de volver a entrar a la sesión).
 - La llave SSH para GitHub (`~/.ssh/id_ed25519`, sin passphrase), si no existe. Se sube a GitHub con `gh auth login -p ssh`, en los pasos manuales.
-- La fuente JetBrainsMono Nerd Font. En GNOME, además, la pone como fuente de Ptyxis (la terminal) y hace que las pestañas nuevas se abran en la carpeta de la actual.
+- La fuente JetBrainsMono Nerd Font.
+- En GNOME, la terminal [Ghostty](https://ghostty.org), del COPR comunitario `scottames/ghostty`: no está en los repos oficiales de Fedora ni en Flathub. En Mac viene de brew y en KDE la terminal sigue siendo Konsole.
 - Oh My Zsh, Powerlevel10k y los plugins `zsh-autosuggestions` y `zsh-syntax-highlighting`.
 - nvm con Node LTS, con `lts/*` como versión por defecto: cuando sale una LTS nueva e instalas esa versión, pasa a ser la de por defecto.
 - herdr, con su propio instalador en Mac y en Fedora: queda en `~/.local/bin` y se actualiza con `herdr update`, no con `brew` ni `dnf`.
@@ -43,12 +44,12 @@ Además de los archivos de configuración, `install.sh` instala:
 ├── zsh/            .zshrc, .p10k.zsh y .config/zsh/{aliases,linux,mac}.zsh
 ├── git/            .gitconfig y .config/git/ignore
 ├── ssh/            .ssh/config
-├── claude/         .claude/rules/markdown.md y .claude/hooks/herdr-orchestrator.{sh,md}
+├── claude/         .claude/rules/*.md, .claude/commands/worktree.md y .claude/hooks/herdr-orchestrator.{sh,md}
 ├── herdr/          .config/herdr/config.toml
 ├── vscodium/       settings.json (una sola copia para Linux y Mac) + extensions
 ├── konsole/        perfil de Konsole
 ├── vicinae/        settings.json de Vicinae y atajo Meta+Shift+V al historial del portapapeles (el atajo, solo KDE)
-├── hyper/          .hyper.js
+├── ghostty/        .config/ghostty/config.ghostty
 ├── custom-packages/ comando que instala y actualiza los programas de GitHub
 ├── packages/       listas de lo que se instala en cada sistema
 ├── install.sh      instala y enlaza todo
@@ -131,7 +132,7 @@ Los paquetes de Stow que se enlazan en cada equipo. Un cambio en uno de ellos ll
 | `zsh git ssh claude herdr vscodium custom-packages` | ✓ | ✓ | ✓ |
 | `vicinae` | ✓ | ✓ | |
 | `konsole` | ✓ | | |
-| `hyper` | | | ✓ |
+| `ghostty` | | ✓ | ✓ |
 
 ### zsh
 
@@ -215,7 +216,7 @@ Todas son texto plano: un paquete por línea, y se ignoran los comentarios (`#`)
 
 ### custom-packages
 
-Algunos programas no están en los gestores de paquetes y se bajan de su release en GitHub. En Fedora son los que no están en dnf ni en Flathub: AFFiNE, git-flow-next, balenaEtcher, Vicinae y, solo en GNOME (si existe `gnome-shell`), la extensión de Vicinae. En Mac es MarkText, porque Homebrew desactivó su cask en septiembre de 2026 (no pasa Gatekeeper). Como los gestores de paquetes no los siguen, `custom-packages` compara la versión instalada con la última release y los instala o actualiza. `install.sh` lo enlaza en `~/.local/bin` e instala los que falten (`custom-packages install -y`; con `--dry-run`, solo `custom-packages ls`). Nunca los actualiza: eso queda para `custom-packages update`. Si falla, por ejemplo porque GitHub no responde, `install.sh` avisa y sigue con el resto.
+Algunos programas no están en los gestores de paquetes y se bajan de su release en GitHub. En Fedora son los que no están en dnf ni en Flathub: AFFiNE, git-flow-next, lazygit, lazydocker, balenaEtcher, Vicinae y, solo en GNOME (si existe `gnome-shell`), la extensión de Vicinae. En Mac es MarkText, porque Homebrew desactivó su cask en septiembre de 2026 (no pasa Gatekeeper). Como los gestores de paquetes no los siguen, `custom-packages` compara la versión instalada con la última release y los instala o actualiza. `install.sh` lo enlaza en `~/.local/bin` e instala los que falten (`custom-packages install -y`; con `--dry-run`, solo `custom-packages ls`). Nunca los actualiza: eso queda para `custom-packages update`. Si falla, por ejemplo porque GitHub no responde, `install.sh` avisa y sigue con el resto.
 
 ```bash
 custom-packages ls            # lista cada programa con su versión instalada y la última, sin cambiar nada
@@ -257,8 +258,10 @@ sudo usermod -aG docker $USER
 # Apps gráficas
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak install --user -y flathub $(sed 's/#.*//' packages/flatpak)
-# AFFiNE, git-flow-next, balenaEtcher, Vicinae y (en GNOME) la extensión de Vicinae: no están en dnf ni en Flathub, se bajan de GitHub
+# AFFiNE, git-flow-next, lazygit, lazydocker, balenaEtcher, Vicinae y (en GNOME) la extensión de Vicinae: no están en dnf ni en Flathub, se bajan de GitHub
 ./custom-packages/.local/bin/custom-packages install
+# Solo GNOME: Ghostty, del COPR comunitario
+sudo dnf copr enable -y scottames/ghostty && sudo dnf install -y ghostty
 ```
 
 **Solo GNOME** (Vicinae: extensión, servicio y atajos; después, cerrar sesión y volver a entrar):
@@ -315,14 +318,12 @@ stow -t ~ --no-folding --ignore='Library' vscodium
 stow -t ~ --no-folding vicinae
 # Solo KDE
 stow -t ~ --no-folding konsole
-# Solo GNOME: fuente de Ptyxis y pestañas nuevas en la misma carpeta (vive en dconf, no en un archivo)
-gsettings set org.gnome.Ptyxis use-system-font false
-gsettings set org.gnome.Ptyxis font-name 'JetBrainsMono Nerd Font Mono 11'
-profile=$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")
-gsettings set "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$profile/" preserve-directory 'always'
+# Solo GNOME
+stow -t ~ --no-folding ghostty
 
 # Mac
 stow -t ~ --no-folding --ignore='\.var' vscodium
+stow -t ~ --no-folding ghostty
 ```
 
 ### 3. Fuente
@@ -442,13 +443,13 @@ Supongamos que quieres versionar la configuración de `btop`, que vive en `~/.co
 
 ### Cómo está organizado
 
-Cada paso es una función (`install_font`, `configure_ptyxis`, `install_node`…), agrupadas en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Al final, `main` las llama en orden: para saber qué hace el script y en qué orden, basta con leer `main`. De arriba abajo, el archivo tiene:
+Cada paso es una función (`install_font`, `install_ghostty_gnome`, `install_node`…), agrupadas en secciones numeradas (`# --- 1. Paquetes ---`, `# --- 2. Symlinks con Stow ---`…). Al final, `main` las llama en orden: para saber qué hace el script y en qué orden, basta con leer `main`. De arriba abajo, el archivo tiene:
 
 - **Constantes:** `DOTFILES` (la carpeta del repo), `PACKAGES`, `BACKUP_DIR`, `NVM_RELEASE` y `LOG`, todas `readonly`. Como `install_node` hace `source` de `nvm.sh` y un `readonly` global no se puede redeclarar con `local`, sus nombres no pueden coincidir con variables de nvm (por eso `NVM_RELEASE` y no `NVM_VERSION`).
 - **Funciones de ayuda** (tabla de abajo).
 - **Inicio**, que `main` ejecuta antes de los pasos:
   - `parse_args`: acepta `-n`/`--dry-run` y termina con error ante cualquier otra opción, para que un `--dry-run` mal escrito no haga la instalación real. Deja `DRY_RUN` (`yes` o `no`).
-  - `start_log`: desde ahí, toda la salida va también a `LOG` (`~/.local/state/dotfiles/install.log`), y la trampa `ERR` anota el comando y la línea de cualquier error.
+  - `start_log`: desde ahí, toda la salida va también a `LOG` (`~/.local/state/dotfiles/install.log`), y la trampa `ERR` (que arma `arm_err_trap`) anota el comando y la línea de cualquier error. `install_node` la desarma mientras corre nvm, porque nvm hace un `which node` que falla a propósito y la trampa lo reportaría como error, con un número de línea de `nvm.sh` que en `install.sh` no existe.
   - `detect_system`: deja `OS` (`Darwin` o `Linux`) y `KDE` (`yes` o `no`).
 
   `DRY_RUN`, `OS` y `KDE` quedan `readonly` en cuanto `main` los define. `on_exit` corre al salir: detiene la renovación de sudo y, si hubo error, dice dónde está el log. Si un paso necesita hacer algo al salir, agrégalo a `on_exit`: otro `trap … EXIT` lo reemplazaría.
@@ -470,6 +471,8 @@ Funciones de ayuda:
 | `gsettings_add schema clave valor` | Agrega un valor a una lista de gsettings, si no está ya |
 | `gsettings_set schema clave valor` | Cambia un valor de gsettings, si no lo tiene ya. El valor va en formato GVariant (`"'texto'"`, `false`…) |
 | `gnome_shortcut id nombre comando atajo` | Crea o actualiza un atajo de teclado personalizado de GNOME |
+| `tilde ruta` | Imprime la ruta con `~` en vez de `/home/esteban`. Da lo mismo en bash 3.2 y en bash 5, a diferencia de `${var/#$HOME/~}` |
+| `arm_err_trap` | Arma la trampa `ERR`. Está en una función porque `install_node` la desarma mientras corre nvm |
 
 ### Agregar un paquete de Stow
 
@@ -499,6 +502,7 @@ install_mi_herramienta() {
 - **Instaladores con `curl … | bash`:** ponlos entre comillas dentro de `run bash -o pipefail -c '…'`. Las comillas hacen que con `--dry-run` no se descarguen. `-o pipefail` hace que el paso falle si falla la descarga: sin él, bash recibe un script vacío y termina bien.
 - **Instaladores que escriben en `.zshrc`:** muchos lo hacen (nvm, por ejemplo). Como `.zshrc` es un archivo del repo, busca en su documentación cómo evitarlo, como el `PROFILE=/dev/null` de nvm. Si alguno se cuela igual, al terminar el script avisa que hay archivos del repo modificados.
 - **Pasos que dependen del sistema:** la condición va en `main`, alrededor de la llamada, con `[[ $OS == Darwin ]]`, `[[ $KDE == yes ]]` o `is_gnome`. Si solo cambia una parte del paso, la condición puede ir dentro de la función, como en `install_font`.
+- **Mensajes con rutas:** pásalas por `tilde` (`info "log en $(tilde "$LOG")"`) y no por `${var/#$HOME/~}`: esa sustitución expande la tilde en bash 5 y no en bash 3.2, así que imprime mal en uno de los dos.
 - **Salir antes:** usa `return`, no `exit`. Y no termines una función con `[[ … ]] && algo`: si la condición es falsa, la función devuelve 1 y, con `set -e`, el script se detiene.
 
 ### Probar los cambios
