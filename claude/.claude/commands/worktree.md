@@ -25,7 +25,7 @@ Eres el orquestador de esta tarea. Tú planificas, das las órdenes, resuelves d
 
 ## 3. Abrir una instancia por worktree
 
-Por cada worktree, abre un panel de herdr con su `--cwd` apuntando al worktree y arranca en él una instancia de Claude. Sigue las reglas de geometría, variables de entorno (`CLAUDE_HERDR_WORKER=1`, `CLAUDE_CONFIG_DIR`) y carpeta de resultados del hook de orquestador. Usa como nombre del agente el nombre del bloque.
+Por cada worktree, abre un panel de herdr con su `--cwd` apuntando al worktree y arranca en él una instancia de Claude. Sigue las reglas de geometría, variable de entorno `CLAUDE_HERDR_WORKER=1` y carpeta de resultados del hook de orquestador. Usa como nombre del agente el nombre del bloque.
 
 ## 4. Dirigir las instancias
 
