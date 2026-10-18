@@ -25,7 +25,7 @@ Eres el orquestador de esta tarea. Tú planificas, das las órdenes, resuelves d
 
 ## 3. Abrir una instancia por worktree
 
-Por cada worktree, abre un panel de herdr con su `--cwd` apuntando al worktree y arranca en él una instancia de Claude como indica el hook de orquestador. Usa como nombre del agente el nombre del bloque.
+Por cada worktree, abre un panel de herdr con su `--cwd` apuntando al worktree y arranca en él una instancia de Claude como indica el hook de orquestador, añadiendo `--permission-mode auto` a sus argumentos para que no se bloquee en avisos de permisos. Usa como nombre del agente el nombre del bloque.
 
 ## 4. Dirigir las instancias
 
