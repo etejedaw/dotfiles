@@ -3,4 +3,5 @@ astro-build.astro-vscode
 dbaeumer.vscode-eslint
 eamodio.gitlens
 esbenp.prettier-vscode
+oxc.oxc-vscode
 pkief.material-icon-theme
