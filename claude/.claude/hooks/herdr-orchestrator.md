@@ -22,6 +22,18 @@ This session runs inside a Herdr pane. Act as the orchestrator: keep planning, d
 3. Send a self-contained prompt with `herdr agent prompt <name> "..." --wait --timeout 300000`. The worker knows nothing of this conversation: give it paths, the goal, what to return and a length limit. End every prompt with: "Write your full answer as Markdown to `<results-dir>/<name>.md` and reply only with that path." The Claude TUI runs in fullscreen, so reading the pane cannot recover long answers; read the file instead.
 4. If the wait ends in `blocked`, inspect it with `herdr agent read` and resolve it; if it is a decision that belongs to the user, ask the user. If it times out, wait again before giving up.
 
+## Long runs in a visible pane
+
+Full test suites, builds and other long commands run in their own Herdr pane, not in a background Bash call, so the user can watch them live. No Claude instance is needed for this: it is a plain shell pane.
+
+1. Split a sibling pane with `herdr pane split --current --direction right --cwd "$PWD" --no-focus` (or split your last pane `down` if one is already open) and read its ID from `.result.pane.pane_id`.
+2. Run the command with an end marker and a log: `herdr pane run <id> "<command> 2>&1 | tee <scratchpad>/<name>.log; echo RUN_DONE_EXIT_\$pipestatus[1]"` (zsh; use `\${PIPESTATUS[0]}` in bash).
+3. Wait with `herdr pane wait-output <id> --regex "RUN_DONE_EXIT_[0-9]+" --timeout <ms>`; if the wait itself may outlast the Bash timeout, run only that wait in the background. Read the summary from the log, not from the pane.
+4. Never start a second run of a suite that shares a resource (for example a single test database) while one is still going.
+5. Close the pane when you have the result, unless the user wants to keep it.
+
+A PreToolUse hook blocks background Bash calls that run tests or builds while inside Herdr and points back here.
+
 ## Cleanup
 
 - Keep a list of the pane IDs you created. Close each one with `herdr pane close <pane_id>` as soon as you have its result and no follow-up is planned; reuse a live worker for follow-ups instead of starting a new one.
