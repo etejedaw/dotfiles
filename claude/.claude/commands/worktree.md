@@ -31,11 +31,12 @@ Por cada worktree, abre un panel de herdr con su `--cwd` apuntando al worktree y
 
 1. Envía a cada instancia un prompt autocontenido: la tarea general en una frase, su bloque en detalle, los archivos que puede tocar y los que no, los criterios de terminado y que **no haga commits ni PRs**.
 2. Indícales que sigan la guía de estilo oficial del framework y que usen las skills de diseño y UX cuando el bloque toque interfaz.
-3. Revisa el resultado de cada instancia antes de darlo por terminado; si falta algo o no cumple los criterios, pídele que lo corrija.
+3. No pidas pasos que ya cubre un hook de pre-commit del repo (por ejemplo, formateo o lint con lint-staged): revisa `.husky/` y la config de `lint-staged` y deja en los criterios solo lo que el hook no corre, como typecheck y tests.
+4. Revisa el resultado de cada instancia antes de darlo por terminado; si falta algo o no cumple los criterios, pídele que lo corrija.
 
 ## 5. Commits e integración
 
-1. Cuando los bloques estén terminados, busca si existe una skill de commits en el repo (`.claude/skills`, `.claude/commands`) o global (`~/.claude/skills`, `~/.claude/commands`). Si existe, pide a cada instancia que la use para commitear su bloque y espera a que confirme. Si no existe, pregúntame cómo quiero los commits y traslada esas reglas a cada instancia.
+1. Cuando los bloques estén terminados, busca si existe una skill de commits en el repo (`.claude/skills`, `.claude/commands`) o global (`~/.claude/skills`, `~/.claude/commands`). Si existe, pide a cada instancia que la use para commitear su bloque (solo nómbrala, sin repetir sus reglas: la skill ya las trae) y espera a que confirme. Si no existe, pregúntame cómo quiero los commits y traslada esas reglas a cada instancia.
 2. Crea una rama de integración desde la rama base, con un nombre que describa la tarea completa, y déjala activa en el checkout principal del repo (`git switch -c <rama-integracion> <rama-base>`).
 3. Integra en ella la rama de cada worktree, una a una, con **rebase merge**, sin commits de merge. Por cada bloque, haz el rebase de su rama sobre la rama de integración desde su worktree (`git -C .worktree/<nombre> rebase <rama-integracion>`) y luego avanza la rama de integración en fast-forward (`git merge --ff-only <nombre>`). Tú resuelves los conflictos durante el rebase y las dependencias entre bloques (imports, tipos compartidos, rutas, paquetes, migraciones…), sin delegarlos en las instancias. Si en un conflicto no está claro qué versión conservar, pregúntame antes de decidir.
 
